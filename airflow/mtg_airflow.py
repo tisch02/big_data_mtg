@@ -19,6 +19,7 @@ dag = DAG('MTG_Crawler',
 # Functions ---------------------------------------------------------------------
 
 def check_connection():
+    print("Check Connection")
     return "Hallo, Welt!"
 
 # Operators ---------------------------------------------------------------------
@@ -28,4 +29,10 @@ check_connection_op = PythonOperator(
     dag=dag
 )
 
-check_connection_op
+run_this = BashOperator(
+    task_id='run_after_loop',
+    bash_command='echo 1',
+    dag=dag,
+)
+
+run_this >> check_connection_op
