@@ -17,7 +17,7 @@ def check_connection():
 
 check_connection_op = PythonOperator(
         task_id=f"check_connection", 
-        python_callable=check_connection_op
+        python_callable=check_connection
     )
 
 
