@@ -1,3 +1,5 @@
+#! /bin/bash
+
 
 # TODO: Allo http/https traffic for VM
 # Configure Port 8080 in Firewall http configuration
