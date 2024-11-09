@@ -2,6 +2,7 @@ from datetime import datetime
 from airflow import DAG
 
 from airflow.operators.python_operator import PythonOperator
+from airflow.decorators import task
 from airflow import AirflowException
 
 args = {
@@ -10,16 +11,11 @@ args = {
 
 # Functions ---------------------------------------------------------------------
 
+@task(task_id="check_connection_op")
 def check_connection():
     raise AirflowException('Connection not available.')
 
 # Operators ---------------------------------------------------------------------
-
-check_connection_op = PythonOperator(
-        task_id=f"check_connection", 
-        python_callable=check_connection
-    )
-
 
 dag = DAG('MTG_Crawler', 
           default_args=args, 
@@ -29,4 +25,4 @@ dag = DAG('MTG_Crawler',
           catchup=False, 
           max_active_runs=1)
 
-check_connection_op
+run_this = check_connection()
