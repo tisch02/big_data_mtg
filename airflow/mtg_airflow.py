@@ -19,7 +19,7 @@ dag = DAG('MTG_Crawler',
 # Functions ---------------------------------------------------------------------
 
 def check_connection():
-    return AirflowException('Connection not available.')
+    return "Hallo, Welt!"
 
 # Operators ---------------------------------------------------------------------
 check_connection_op = PythonOperator(
