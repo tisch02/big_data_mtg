@@ -39,20 +39,21 @@ hiveserver2
 # ----------------------
 docker run -dit --name airflow \
     -p 8080:8080 \
-    --net bigdatanet \
+    --net bigdatanet \    
+    -v ~/shared/big_data_mtg/airflow:/home/airflow/airflow/dags \
     marcelmittelstaedt/airflow:latest
 
 docker exec -it airflow bash
 sudo su airflow
 cd
 
-# http://34.89.242.208:8080/admin/
+# http://34.89.168.124:8080/admin/
 
 # ---------------------
 docker run -dit --name python \
     -p 38383:38383 \
     --net bigdatanet \
-    -v ~/shared:/home/shared\
+    -v ~/shared:/home/shared \
     python:3.12.7-bookworm
 
 docker exec -it python bash

@@ -5,7 +5,7 @@ args = {
     'owner': 'airflow'
 }
 
-dag = DAG('MTG Crawler', 
+dag = DAG('MTG_Crawler', 
           default_args=args, 
           description='Crawling and providing MTG card information',
           schedule_interval='*/5 * * * *',
