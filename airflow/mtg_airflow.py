@@ -1,7 +1,7 @@
 from datetime import datetime
 from airflow import DAG
 
-from airflow.operators.python import PythonOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.decorators import task
 from airflow import AirflowException
 
@@ -15,8 +15,7 @@ def check_connection():
     raise AirflowException('Connection not available.')
 
 # Operators ---------------------------------------------------------------------
-check_connection_op = PythonOperator(
-    task_id="check_connection", 
+check_connection_op = PythonOperator(    
     python_callable=check_connection
 )
 
