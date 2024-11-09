@@ -1,11 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 
-import requests
-
-from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
-from airflow.exceptions import AirflowException
 from airflow.operators.filesystem_operations import CreateDirectoryOperator, ClearDirectoryOperator
 from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsGetFileOperator, HdfsMkdirFileOperator
 from airflow.operators.http_download_operations import HttpDownloadOperator
@@ -60,10 +56,16 @@ hdfs_put_set_names_file = HdfsPutFileOperator(
     dag=dag,
 )
 
-hello_world = BashOperator(
-    task_id='hello_world',
-    bash_command='curl http://python:38383/',
+postgres_create = BashOperator(
+    task_id='postgres_create',
+    bash_command='curl http://python:38383/api/postgres-create',
     dag=dag
 )
 
-hello_world >> create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file
+store_set_names = BashOperator(
+    task_id='store_set_names',
+    bash_command='curl http://python:38383/api/set-names',
+    dag=dag
+)
+
+[create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file, postgres_create] >> store_set_names
