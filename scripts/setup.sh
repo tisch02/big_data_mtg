@@ -22,8 +22,8 @@ docker rm python
 docker network create -d bridge bigdatanet
 
 docker pull marcelmittelstaedt/spark_base:latest
-docker pull marcelmittelstaedt/airflow:latest
 docker pull python:3.12.7-bookworm
+docker pull marcelmittelstaedt/airflow:latest
 
 docker run -dit --name hadoop \
     -p 8088:8088 -p 9870:9870 -p 9864:9864 -p 10000:10000 \
@@ -31,19 +31,10 @@ docker run -dit --name hadoop \
     -p 8888:8888 --net bigdatanet \
     marcelmittelstaedt/spark_base:latest
 
-docker exec -it hadoop bash
-
-sudo su hadoop
-cd
-start-all.sh
-hiveserver2
+docker exec -it python sh -c "sudo su hadoop && cd && start-all.sh && hiveserver2"
 
 # ----------------------
-docker run -dit --name airflow \
-    -p 8080:8080 \
-    --net bigdatanet \    
-    -v ~/shared/big_data_mtg/airflow:/home/airflow/airflow/dags \
-    marcelmittelstaedt/airflow:latest
+docker run -dit --name airflow -p 8080:8080 --net bigdatanet -v ~/shared/big_data_mtg/airflow:/home/airflow/airflow/dags marcelmittelstaedt/airflow:latest
 
 docker exec -it airflow bash
 sudo su airflow
@@ -58,11 +49,6 @@ docker run -dit --name python \
     -v ~/shared:/home/shared \
     python:3.12.7-bookworm
 
-docker exec -it python bash
-cd /home/shared/big_data_mtg
-python -m pip install -r requirements.txt
-python flask_app.py
-
-
+docker exec -it python sh -c "cd /home/shared/big_data_mtg && python -m pip install -r requirements.txt && python flask_app.py"
 
 

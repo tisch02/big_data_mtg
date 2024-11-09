@@ -20,25 +20,11 @@ dag = DAG('MTG_Crawler',
           dagrun_timeout=timedelta(minutes=1),
           max_active_runs=1)
 
-# Functions ---------------------------------------------------------------------
-
-def check_connection():
-    result = requests.get('http://localhost:38383').text
-    return result
-
 # Operators ---------------------------------------------------------------------
-run_this = BashOperator(
+hello_world = BashOperator(
     task_id='run_after_loop',
-    bash_command='echo 1',
+    bash_command='curl https://localhost:38383',
     dag=dag
 )
 
-check_connection_op = PythonOperator(
-    task_id="check_connection",
-    python_callable=check_connection,
-    dag=dag
-)
-
-
-
-run_this >> check_connection_op
+hello_world
