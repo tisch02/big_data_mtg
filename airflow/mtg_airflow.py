@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 
+import requests
+
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.exceptions import AirflowException
@@ -21,8 +23,8 @@ dag = DAG('MTG_Crawler',
 # Functions ---------------------------------------------------------------------
 
 def check_connection():
-    print("Check Connection")
-    return "Hallo, Welt!"
+    result = requests.get('http://localhost:38383').text
+    return result
 
 # Operators ---------------------------------------------------------------------
 run_this = BashOperator(
