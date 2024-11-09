@@ -44,10 +44,25 @@ download_set_names = HttpDownloadOperator(
     dag=dag,
 )
 
+create_hdfs_set_names_dir = HdfsMkdirFileOperator(
+    task_id='create_hdfs_set_names_dir',
+    directory='/user/hadoop/mtg/sets',
+    hdfs_conn_id='hdfs',
+    dag=dag,
+)
+
+hdfs_put_set_names_file = HdfsPutFileOperator(
+    task_id='hdfs_put_set_names_file',
+    local_file='/home/airflow/downloads/set_names.html',
+    remote_file='/user/hadoop/mtg/sets/set_names.html',
+    hdfs_conn_id='hdfs',
+    dag=dag,
+)
+
 hello_world = BashOperator(
-    task_id='run_after_loop',
+    task_id='hello_world',
     bash_command='curl http://python:38383/',
     dag=dag
 )
 
-hello_world >> create_download_dir >> clear_download_dir >> download_set_names
+hello_world >> create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file
