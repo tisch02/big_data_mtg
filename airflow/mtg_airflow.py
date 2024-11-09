@@ -14,7 +14,8 @@ def check_connection():
     raise AirflowException('Connection not available.')
 
 # Operators ---------------------------------------------------------------------
-check_connection_op = PythonOperator(    
+check_connection_op = PythonOperator(
+    task_id="check_connection",
     python_callable=check_connection
 )
 
