@@ -25,13 +25,9 @@ docker pull marcelmittelstaedt/spark_base:latest
 docker pull python:3.12.7-bookworm
 docker pull marcelmittelstaedt/airflow:latest
 
-docker run -dit --name hadoop \
-    -p 8088:8088 -p 9870:9870 -p 9864:9864 -p 10000:10000 \
-    -p 8032:8032 -p 8030:8030 -p 8031:8031 -p 9000:9000 \
-    -p 8888:8888 --net bigdatanet \
-    marcelmittelstaedt/spark_base:latest
+docker run -dit --name hadoop -p 8088:8088 -p 9870:9870 -p 9864:9864 -p 10000:10000 -p 8032:8032 -p 8030:8030 -p 8031:8031 -p 9000:9000 -p 8888:8888 --net bigdatanet marcelmittelstaedt/spark_base:latest
 
-docker exec -it python sh -c "sudo su hadoop && cd && start-all.sh && hiveserver2"
+docker exec -it hadoop bash -c "sudo su hadoop && cd && start-all.sh && hiveserver2"
 
 # ----------------------
 docker run -dit --name airflow -p 8080:8080 --net bigdatanet -v ~/shared/big_data_mtg/airflow:/home/airflow/airflow/dags marcelmittelstaedt/airflow:latest

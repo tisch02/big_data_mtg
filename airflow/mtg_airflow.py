@@ -7,6 +7,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.exceptions import AirflowException
 from airflow.operators.filesystem_operations import CreateDirectoryOperator, ClearDirectoryOperator
+from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsGetFileOperator, HdfsMkdirFileOperator
 from airflow.operators.http_download_operations import HttpDownloadOperator
 
 args = {
