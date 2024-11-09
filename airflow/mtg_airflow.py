@@ -23,7 +23,7 @@ dag = DAG('MTG_Crawler',
 # Operators ---------------------------------------------------------------------
 hello_world = BashOperator(
     task_id='run_after_loop',
-    bash_command='curl https://localhost:38383',
+    bash_command='curl http://python:38383/',
     dag=dag
 )
 
