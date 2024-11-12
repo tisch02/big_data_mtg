@@ -3,7 +3,7 @@ from flask import Response
 
 class PostgresQL():
     CONN = None
-    IP = "34.89.168.124"
+    IP = "34.159.43.81"
     
     @staticmethod
     def _get_connection():
