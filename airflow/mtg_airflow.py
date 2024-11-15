@@ -23,12 +23,11 @@ dag = DAG('MTG_Crawler',
 # HiveQL queries ----------------------------------------------------------------
 
 hql_create_ids_list = """
-CREATE EXTERNAL TABLE IF NOT EXISTS ids(
-    set_name STRING,
+CREATE EXTERNAL TABLE IF NOT EXISTS ids(    
 	url STRING,
     id INT,
     insert_date STRING
-) PARTITIONED BY (set_name) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids';
+) PARTITIONED BY (set_name STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids';
 """
 
 # Operators ---------------------------------------------------------------------
