@@ -61,7 +61,7 @@ download_set_names = HttpDownloadOperator(
 download_ids = HttpDownloadOperator(
     task_id='download_ids',
     download_uri='http://python:38383/api/prepare-card-ids',
-    save_to=f'/home/airflow/downloads/set_ids_{download_id}.csv',
+    save_to=f'/home/airflow/downloads/set_ids_{download_id}.tsv',
     dag=dag,
 )
 
@@ -89,8 +89,8 @@ hdfs_put_set_names_file = HdfsPutFileOperator(
 
 hdfs_put_ids_file = HdfsPutFileOperator(
     task_id='hdfs_put_ids_file',
-    local_file=f'/home/airflow/downloads/set_ids_{download_id}.csv',
-    remote_file=f'/user/hadoop/mtg/ids/set_ids_{download_id}.csv',
+    local_file=f'/home/airflow/downloads/set_ids_{download_id}.tsv',
+    remote_file=f'/user/hadoop/mtg/ids/set_ids_{download_id}.tsv',
     hdfs_conn_id='hdfs',
     dag=dag,
 )
