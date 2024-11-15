@@ -45,7 +45,8 @@ def hadoop_read():
 
 @app.route("/api/mark-stored-sets")
 def stored_sets():
-    set_names = Hive.get_sets()    
+    set_names = Hive.get_sets()
+    print(set_names)
     PostgresQL.mark_stored_sets(set_names)
     return ""
 

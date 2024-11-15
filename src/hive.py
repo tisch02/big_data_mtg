@@ -11,7 +11,7 @@ class Hive():
     @staticmethod
     def _get_connection():
         if Hive.CONN is None:
-            Hive.CONN = hive.Connection(host=Hive.IP, port=10000)
+            Hive.CONN = hive.Connection(host=Hive.IP, port=10000, username="hadoop")
         return Hive.CONN
     
     @staticmethod
