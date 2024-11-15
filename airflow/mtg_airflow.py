@@ -20,7 +20,7 @@ dag = DAG('MTG_Crawler',
           schedule_interval='*/3 * * * *',
           start_date=datetime(2019, 10, 16), 
           catchup=False,
-          dagrun_timeout=timedelta(minutes=1),
+          dagrun_timeout=timedelta(minutes=3),
           max_active_runs=1)
 
 download_id = str(uuid.uuid4())
