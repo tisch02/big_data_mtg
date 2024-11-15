@@ -88,12 +88,14 @@ store_set_names = BashOperator(
 )
 
 create_hive_table_ids = HiveOperator(
-    task_id='create_title_ratings_table',
+    task_id='create_hive_table_ids',
     hql=hql_create_ids_list,
     hive_cli_conn_id='beeline',
     dag=dag)
 
-set_names_flow = create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file
-ids_flow = create_hdfs_ids_dir >> create_hive_table_ids
 
-[set_names_flow, postgres_create, ids_flow] >> store_set_names
+[
+    create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file, 
+    postgres_create, 
+    create_hdfs_ids_dir >> create_hive_table_ids
+ ] >> store_set_names
