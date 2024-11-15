@@ -90,7 +90,7 @@ hdfs_put_set_names_file = HdfsPutFileOperator(
 hdfs_put_ids_file = HdfsPutFileOperator(
     task_id='hdfs_put_ids_file',
     local_file=f'/home/airflow/downloads/set_ids_{download_id}.csv',
-    remote_file=f'/user/hadoop/mtg/sets/set_ids_{download_id}.csv',
+    remote_file=f'/user/hadoop/mtg/ids/set_ids_{download_id}.csv',
     hdfs_conn_id='hdfs',
     dag=dag,
 )
