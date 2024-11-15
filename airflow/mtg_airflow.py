@@ -27,7 +27,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ids(
 	url STRING,
     id INT,
     insert_date STRING
-) PARTITIONED BY (set_name STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids';
+) PARTITIONED BY (set_name STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids' TBLPROPERTIES ('skip.header.line.count'='1');
 """
 
 # Operators ---------------------------------------------------------------------
@@ -52,6 +52,13 @@ download_set_names = HttpDownloadOperator(
     dag=dag,
 )
 
+download_ids = HttpDownloadOperator(
+    task_id='download_set_names',
+    download_uri='http://python:38383/api/prepare-card-ids',
+    save_to='/home/airflow/downloads/set_ids_{{ run_id  }}.csv',
+    dag=dag,
+)
+
 create_hdfs_set_names_dir = HdfsMkdirFileOperator(
     task_id='create_hdfs_set_names_dir',
     directory='/user/hadoop/mtg/sets',
@@ -70,6 +77,14 @@ hdfs_put_set_names_file = HdfsPutFileOperator(
     task_id='hdfs_put_set_names_file',
     local_file='/home/airflow/downloads/set_names.html',
     remote_file='/user/hadoop/mtg/sets/set_names.html',
+    hdfs_conn_id='hdfs',
+    dag=dag,
+)
+
+hdfs_put_ids_file = HdfsPutFileOperator(
+    task_id='hdfs_put_ids_file',
+    local_file='/home/airflow/downloads/set_ids_{{ run_id  }}.csv',
+    remote_file='/user/hadoop/mtg/sets/set_ids_{{ run_id  }}.csv',
     hdfs_conn_id='hdfs',
     dag=dag,
 )
@@ -96,5 +111,5 @@ create_hive_table_ids = HiveOperator(
 [
     create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file, 
     postgres_create, 
-    create_hdfs_ids_dir >> create_hive_table_ids
+    create_hdfs_ids_dir >> create_hive_table_ids >> download_ids >> hdfs_put_ids_file
  ] >> store_set_names

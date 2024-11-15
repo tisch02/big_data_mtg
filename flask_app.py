@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, Response
 from src.scraper import Scraper
 from src.hadoop import Hadoop
@@ -40,9 +41,17 @@ def hadoop_read():
 
 @app.route("/api/prepare-card-ids")
 def prepare_card_ids():
+    
 
     set_name = PostgresQL.get_set_name()    
-    Scraper.card_ids(set_name)
+    df = Scraper.card_ids(set_name)
+    
+    # set_names = Hive.get_sets()
+    
+    # Hive.insert_ids("my-url", "my-set", [1, 2, 3])
+    
+    
+    # ----------
     
     # Steps for Airflow
     # Create dir for raw files
@@ -58,7 +67,7 @@ def prepare_card_ids():
     # - Scrape card IDs
     # - Create CSV
     # - PUT CSV to HDFS tables
-    return ""
+    return df.to_csv(index=False)
 
 if __name__ == '__main__':    
     PostgresQL.IP = IP

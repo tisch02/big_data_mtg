@@ -20,3 +20,11 @@ class Hive():
         cur = conn.cursor()
         cur.execute("SELECT version()")
         return cur.fetchone()[0]
+    
+    @staticmethod
+    def get_sets():
+        conn = Hive._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT(set_name) FROM ids")
+        return cur.fetchmany()
+    

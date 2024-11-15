@@ -1,5 +1,7 @@
+from datetime import datetime
 from bs4 import BeautifulSoup
 import urllib.request
+import pandas as pd
 
 class Scraper():
     
@@ -42,19 +44,29 @@ class Scraper():
             # Concatenate URL with card search query and page number
             url = f"https://gatherer.wizards.com/Pages/Search/Default.aspx?page={page_num}"
             url += f"&set=[\"{set_name.replace(" ", "+")}\"]"            
-                    
-            # Concatenate unique file name and download page
-            filename = f"{set_name.lower().replace(" ", "_")}_{page_num}.html"
+
+            # Concatenate unique file name and download page            
             content = Scraper._get_html(url)
             ids = Scraper._get_card_ids(content)
-            results.append((filename, ids))
+            results.append((url, ids, datetime.now().isoformat()))
             
             # Continue throug all pages              
             if Scraper._is_last(content):
                 stop = True
             page_num += 1
             
-        print(results)
-        return results
+        # Create dataframe
+        cols = ["url", "id", "insert_date", "set_name"]
+        df = pd.DataFrame(columns=cols)        
+        for url, ids, date in results:
+            append_frame = pd.DataFrame(data={
+                "url": [url] * len(ids),
+                "id": ids,
+                "insert_date": [str(date)] * len(ids),
+                "set_name": [set_name] * len(ids)
+            })            
+            df = pd.concat([df, append_frame])
+        
+        return df
         
         
