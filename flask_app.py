@@ -32,6 +32,10 @@ def postgres_create():
 def postgres_drop():
     return PostgresQL.drop_tables()
 
+@app.route("/api/hive-drop")
+def hive_drop():
+    return Hive.drop_tables()
+
 @app.route("/api/set-names")
 def hadoop_read():
     hdfs = Hadoop(ip=IP)

@@ -22,6 +22,14 @@ class Hive():
         return cur.fetchone()[0]
     
     @staticmethod
+    def drop_tables():
+        conn = Hive._get_connection()
+        cur = conn.cursor()
+        cur.execute("DROP TABLE IF EXISTS ids PURGE")
+        conn.commit()
+        return ""
+    
+    @staticmethod
     def get_sets():
         conn = Hive._get_connection()
         cur = conn.cursor()

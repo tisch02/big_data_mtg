@@ -1,3 +1,5 @@
+import uuid
+
 from datetime import datetime, timedelta
 from airflow import DAG
 
@@ -21,14 +23,17 @@ dag = DAG('MTG_Crawler',
           dagrun_timeout=timedelta(minutes=1),
           max_active_runs=1)
 
+download_id = str(uuid.uuid4())
+
 # HiveQL queries ----------------------------------------------------------------
 
 hql_create_ids_list = """
 CREATE EXTERNAL TABLE IF NOT EXISTS ids(    
 	url STRING,
     id INT,
-    insert_date STRING
-) PARTITIONED BY (set_name STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids' TBLPROPERTIES ('skip.header.line.count'='1');
+    insert_date STRING,
+    set_name STRING
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids' TBLPROPERTIES ('skip.header.line.count'='1');
 """
 
 # Operators ---------------------------------------------------------------------
@@ -56,7 +61,7 @@ download_set_names = HttpDownloadOperator(
 download_ids = HttpDownloadOperator(
     task_id='download_ids',
     download_uri='http://python:38383/api/prepare-card-ids',
-    save_to='/home/airflow/downloads/set_ids_{{ run_id  }}.csv',
+    save_to=f'/home/airflow/downloads/set_ids_{download_id}.csv',
     dag=dag,
 )
 
@@ -84,8 +89,8 @@ hdfs_put_set_names_file = HdfsPutFileOperator(
 
 hdfs_put_ids_file = HdfsPutFileOperator(
     task_id='hdfs_put_ids_file',
-    local_file='/home/airflow/downloads/set_ids_{{ run_id  }}.csv',
-    remote_file='/user/hadoop/mtg/sets/set_ids_{{ run_id  }}.csv',
+    local_file=f'/home/airflow/downloads/set_ids_{download_id}.csv',
+    remote_file=f'/user/hadoop/mtg/sets/set_ids_{download_id}.csv',
     hdfs_conn_id='hdfs',
     dag=dag,
 )
