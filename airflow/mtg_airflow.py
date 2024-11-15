@@ -53,7 +53,7 @@ download_set_names = HttpDownloadOperator(
 )
 
 download_ids = HttpDownloadOperator(
-    task_id='download_set_names',
+    task_id='download_ids',
     download_uri='http://python:38383/api/prepare-card-ids',
     save_to='/home/airflow/downloads/set_ids_{{ run_id  }}.csv',
     dag=dag,
