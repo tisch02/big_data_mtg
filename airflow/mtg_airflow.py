@@ -27,7 +27,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ids(
     set_name STRING,
 	url STRING,
     id INT,
-    insert STRING
+    insert_date STRING
 ) PARTITIONED BY (set_name) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids';
 """
 
