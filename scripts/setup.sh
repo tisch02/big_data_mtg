@@ -29,7 +29,7 @@ docker pull postgres:latest
 docker run -dit --name hadoop -p 8088:8088 -p 9870:9870 -p 9864:9864 -p 10000:10000 -p 8032:8032 -p 8030:8030 -p 8031:8031 -p 9000:9000 -p 8888:8888 --net bigdatanet marcelmittelstaedt/spark_base:latest
 
 docker exec -it hadoop bash -c "sudo su hadoop && cd && start-all.sh && hiveserver2"
-# http://34.159.43.81:9864/datanode.html
+# http://34.159.43.81:9870
 
 # ----------------------
 docker run -dit --name airflow -p 8080:8080 --net bigdatanet -v ~/shared/big_data_mtg/airflow:/home/airflow/airflow/dags marcelmittelstaedt/airflow:latest
