@@ -48,7 +48,7 @@ def stored_sets():
     set_names = Hive.get_sets()
     print(set_names)
     PostgresQL.mark_stored_sets(set_names)
-    return ""
+    return ", ".join(set_names)
 
 @app.route("/api/prepare-card-ids")
 def prepare_card_ids():
