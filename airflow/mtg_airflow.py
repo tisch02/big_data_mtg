@@ -23,7 +23,7 @@ dag = DAG('MTG_Crawler',
 # HiveQL queries ----------------------------------------------------------------
 
 hql_create_ids_list = """
-CREATE TABLE IF NOT EXISTS ids(
+CREATE EXTERNAL TABLE IF NOT EXISTS ids(
     set_name STRING,
 	url STRING,
     id INT,
@@ -61,7 +61,7 @@ create_hdfs_set_names_dir = HdfsMkdirFileOperator(
 )
 
 create_hdfs_ids_dir = HdfsMkdirFileOperator(
-    task_id='create_hdfs_set_names_dir',
+    task_id='create_hdfs_ids_dir',
     directory='/user/hadoop/mtg/ids',
     hdfs_conn_id='hdfs',
     dag=dag,
