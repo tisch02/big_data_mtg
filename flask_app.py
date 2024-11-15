@@ -47,7 +47,7 @@ def hadoop_read():
 def stored_sets():
     set_names = Hive.get_sets()
     print(set_names)
-    return
+    return ""
 
 @app.route("/api/prepare-card-ids")
 def prepare_card_ids():

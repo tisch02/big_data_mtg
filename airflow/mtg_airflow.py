@@ -29,7 +29,7 @@ download_id = str(uuid.uuid4())
 
 hql_create_ids_list = """
 CREATE EXTERNAL TABLE IF NOT EXISTS ids(    
-	url STRING,
+	downloaded BOOLEAN,
     id INT,
     insert_date STRING,
     set_name STRING

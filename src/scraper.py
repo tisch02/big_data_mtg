@@ -56,11 +56,11 @@ class Scraper():
             page_num += 1
             
         # Create dataframe
-        cols = ["url", "id", "insert_date", "set_name"]
+        cols = ["downloaded", "id", "insert_date", "set_name"]
         df = pd.DataFrame(columns=cols)        
         for url, ids, date in results:
             append_frame = pd.DataFrame(data={
-                "url": [url] * len(ids),
+                "downloaded": [False] * len(ids),
                 "id": ids,
                 "insert_date": [str(date)] * len(ids),
                 "set_name": [set_name] * len(ids)
