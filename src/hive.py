@@ -34,5 +34,5 @@ class Hive():
         conn = Hive._get_connection()
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT(set_name) FROM ids")
-        return cur.fetchmany()
+        return [x[0] for x in cur.fetchall()]
     

@@ -91,10 +91,24 @@ class PostgresQL():
         try:
             conn = PostgresQL._get_connection()
             cur = conn.cursor()                
-            cur.execute("""SELECT name FROM data.sets WHERE downloaded = false LIMIT 1;""")
+            cur.execute("""SELECT name FROM data.sets WHERE downloaded = false ORDER BY name LIMIT 1;""")
             fetch = cur.fetchone()
             return None if fetch is None else fetch[0]
             
         except Exception as error:
-            print(error)
+            return Response(response=str(error), status=400)
+        
+    @staticmethod
+    def mark_stored_sets(sets: list[str]) -> None:
+        try:
+            conn = PostgresQL._get_connection()
+            cur = conn.cursor()
+            
+            for set in sets:                
+                cur.execute("""UPDATE data.sets SET downloaded = true WHERE downloaded = false AND name = %s;""", (set, ))
+            conn.commit()
+            
+            return Response(status=200)
+            
+        except Exception as error:            
             return Response(response=str(error), status=400)

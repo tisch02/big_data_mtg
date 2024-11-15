@@ -43,41 +43,23 @@ def hadoop_read():
     names = Scraper.sets(hdfs.get_file(path))    
     return PostgresQL.store_sets(names)
 
-@app.route("/api/stored-sets")
+@app.route("/api/mark-stored-sets")
 def stored_sets():
-    set_names = Hive.get_sets()
-    print(set_names)
+    set_names = Hive.get_sets()    
+    PostgresQL.mark_stored_sets(set_names)
     return ""
 
 @app.route("/api/prepare-card-ids")
 def prepare_card_ids():
+    # TODO: Only return if a certain amount of undownloaded cards is passed
     
-
-    set_name = PostgresQL.get_set_name()    
-    df = Scraper.card_ids(set_name)
+    set_name = PostgresQL.get_set_name()
+    print(set_name)
     
-    # set_names = Hive.get_sets()
-    
-    # Hive.insert_ids("my-url", "my-set", [1, 2, 3])
-    
-    
-    # ----------
-    
-    # Steps for Airflow
-    # Create dir for raw files
-    # Create dir for CSV files
-    # Create table for CSV files
-    # Call API
-    
-    # Check how many cards are ready for download
-    
-    # If to few: 
-    # - Download web pages
-    # - Store the raw files to HDFS
-    # - Scrape card IDs
-    # - Create CSV
-    # - PUT CSV to HDFS tables
-    return df.to_csv(index=False, sep="\t")
+    if set_name is not None:
+        df = Scraper.card_ids(set_name)    
+        return df.to_csv(index=False, sep="\t")
+    return Response(response="There is no more set to dowload", status=400)
 
 if __name__ == '__main__':    
     PostgresQL.IP = IP

@@ -32,7 +32,7 @@ class Scraper():
     def _get_card_ids(html_content: str) -> list:
         soup = BeautifulSoup(html_content, 'html.parser')
         rows = soup.find_all("tr", {"class": "cardItem"})
-        return [int(row.find("a").get("href").split("multiverseid=")[1]) for row in rows]
+        return [int(row.find("a").get("href").split("multiverseid=")[1].split("&")[0]) for row in rows]
     
     @staticmethod
     def card_ids(set_name):                
@@ -43,7 +43,7 @@ class Scraper():
         while not stop:
             # Concatenate URL with card search query and page number
             url = f"https://gatherer.wizards.com/Pages/Search/Default.aspx?page={page_num}"
-            url += f"&set=[\"{set_name.replace(" ", "+")}\"]"            
+            url += f"&set=[\"{set_name.replace(" ", "+")}\"]"
 
             # Concatenate unique file name and download page            
             content = Scraper._get_html(url)
@@ -60,7 +60,6 @@ class Scraper():
         df = pd.DataFrame(columns=cols)        
         for url, ids, date in results:
             append_frame = pd.DataFrame(data={
-                "downloaded": [False] * len(ids),
                 "id": ids,
                 "insert_date": [str(date)] * len(ids),
                 "set_name": [set_name] * len(ids)

@@ -17,7 +17,7 @@ args = {
 dag = DAG('MTG_Crawler', 
           default_args=args, 
           description='Crawling and providing MTG card information',
-          schedule_interval='*/2 * * * *',
+          schedule_interval='*/3 * * * *',
           start_date=datetime(2019, 10, 16), 
           catchup=False,
           dagrun_timeout=timedelta(minutes=1),
@@ -28,8 +28,7 @@ download_id = str(uuid.uuid4())
 # HiveQL queries ----------------------------------------------------------------
 
 hql_create_ids_list = """
-CREATE EXTERNAL TABLE IF NOT EXISTS ids(
-	downloaded BOOLEAN,
+CREATE EXTERNAL TABLE IF NOT EXISTS ids(	
     id INT,
     insert_date STRING,
     set_name STRING
@@ -107,6 +106,12 @@ store_set_names = BashOperator(
     dag=dag
 )
 
+mark_downloaded_set_ids = BashOperator(
+    task_id='mark_downloaded_set_ids',
+    bash_command='curl http://python:38383/api/mark-stored-sets',
+    dag=dag
+)
+
 create_hive_table_ids = HiveOperator(
     task_id='create_hive_table_ids',
     hql=hql_create_ids_list,
@@ -120,5 +125,5 @@ dummy_op = DummyOperator(
 [
     create_download_dir >> clear_download_dir,
     create_hdfs_set_names_dir,
-    create_hdfs_ids_dir    
-] >> dummy_op >> postgres_create >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> download_ids >> hdfs_put_ids_file
+    create_hdfs_ids_dir >> create_hive_table_ids
+] >> dummy_op >> postgres_create >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> download_ids >> hdfs_put_ids_file >> mark_downloaded_set_ids
