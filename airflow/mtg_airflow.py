@@ -28,12 +28,12 @@ download_id = str(uuid.uuid4())
 # HiveQL queries ----------------------------------------------------------------
 
 hql_create_ids_list = """
-CREATE EXTERNAL TABLE IF NOT EXISTS ids(    
+CREATE EXTERNAL TABLE IF NOT EXISTS ids(
 	downloaded BOOLEAN,
     id INT,
     insert_date STRING,
     set_name STRING
-) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids' TBLPROPERTIES ('skip.header.line.count'='1');
+) COMMENT 'Card IDs that should be downloaded' ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' STORED AS TEXTFILE LOCATION '/user/hadoop/mtg/ids' TBLPROPERTIES ('skip.header.line.count'='1');
 """
 
 # Operators ---------------------------------------------------------------------

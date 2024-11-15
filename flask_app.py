@@ -77,7 +77,7 @@ def prepare_card_ids():
     # - Scrape card IDs
     # - Create CSV
     # - PUT CSV to HDFS tables
-    return df.to_csv(index=False)
+    return df.to_csv(index=False, sep="\t")
 
 if __name__ == '__main__':    
     PostgresQL.IP = IP
