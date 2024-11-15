@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.filesystem_operations import CreateDirectoryOperator, ClearDirectoryOperator
 from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsMkdirFileOperator
@@ -107,13 +108,16 @@ create_hive_table_ids = HiveOperator(
     hive_cli_conn_id='beeline',
     dag=dag)
 
+dummy_op = DummyOperator(
+        task_id='dummy', 
+        dag=dag)
 
 [
     create_download_dir >> clear_download_dir,
     create_hdfs_set_names_dir,
     create_hdfs_ids_dir,
     create_hive_table_ids
-] >> [
+] >> dummy_op >> [
     download_set_names >> hdfs_put_set_names_file, 
     postgres_create,     
  ] >> store_set_names >> download_ids >> hdfs_put_ids_file
