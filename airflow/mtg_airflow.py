@@ -122,7 +122,4 @@ dummy_op = DummyOperator(
     create_hdfs_set_names_dir,
     create_hdfs_ids_dir,
     create_hive_table_ids
-] >> dummy_op >> [
-    download_set_names >> hdfs_put_set_names_file, 
-    postgres_create,     
- ] >> store_set_names >> download_ids >> hdfs_put_ids_file
+] >> dummy_op >> postgres_create >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> download_ids >> hdfs_put_ids_file

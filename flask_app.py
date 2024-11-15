@@ -43,6 +43,12 @@ def hadoop_read():
     names = Scraper.sets(hdfs.get_file(path))    
     return PostgresQL.store_sets(names)
 
+@app.route("/api/stored-sets")
+def stored_sets():
+    set_names = Hive.get_sets()
+    print(set_names)
+    return
+
 @app.route("/api/prepare-card-ids")
 def prepare_card_ids():
     
