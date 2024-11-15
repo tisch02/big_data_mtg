@@ -1,11 +1,27 @@
-from flask import Flask
+from flask import Flask, Response
 from src.scraper import Scraper
 from src.hadoop import Hadoop
 from src.postgres import PostgresQL
 from src.hive import Hive
 
 app = Flask(__name__)
-IP = "34.159.43.81"
+IP = "34.107.40.189"
+Hive.set_ip(IP)
+PostgresQL.set_ip(IP)
+
+@app.route("/api/test")
+def test():
+    try: 
+        # Test all connections
+        hive_version = Hive.get_version()
+        postgres_version = PostgresQL.get_version()
+                
+        return {
+            "hive version": hive_version,
+            "postgres_version": postgres_version
+        }
+    except:
+        return Response(status=400)
 
 @app.route("/api/postgres-create")
 def postgres_create():
@@ -24,7 +40,9 @@ def hadoop_read():
 
 @app.route("/api/prepare-card-ids")
 def prepare_card_ids():
-    return Hive.get_version()
+
+    set_name = PostgresQL.get_set_name()    
+    Scraper.card_ids(set_name)
     
     # Steps for Airflow
     # Create dir for raw files
@@ -40,7 +58,7 @@ def prepare_card_ids():
     # - Scrape card IDs
     # - Create CSV
     # - PUT CSV to HDFS tables
-    return result
+    return ""
 
 if __name__ == '__main__':    
     PostgresQL.IP = IP
