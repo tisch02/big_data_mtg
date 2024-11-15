@@ -109,7 +109,11 @@ create_hive_table_ids = HiveOperator(
 
 
 [
-    create_download_dir >> clear_download_dir >> download_set_names >> create_hdfs_set_names_dir >> hdfs_put_set_names_file, 
-    postgres_create, 
-    create_hdfs_ids_dir >> create_hive_table_ids >> download_ids >> hdfs_put_ids_file
- ] >> store_set_names
+    create_download_dir >> clear_download_dir,
+    create_hdfs_set_names_dir,
+    create_hdfs_ids_dir,
+    create_hive_table_ids
+] >> [
+    download_set_names >> hdfs_put_set_names_file, 
+    postgres_create,     
+ ] >> store_set_names >> download_ids >> hdfs_put_ids_file

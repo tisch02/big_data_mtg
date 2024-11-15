@@ -45,7 +45,7 @@ docker run -dit --name python \
     -v ~/shared:/home/shared \
     python:3.12.7-bookworm
 
-docker exec -it python sh -c "cd /home/shared/big_data_mtg && python -m pip install -r requirements.txt && python flask_app.py"
+docker exec -it python bash -c "cd /home/shared/big_data_mtg && python -m pip install -r requirements.txt && python flask_app.py"
 
 # PostgresQL
 docker run -dit --name postgres -p 5432:5432 --net bigdatanet -e POSTGRES_PASSWORD=root postgres:latest
