@@ -46,6 +46,8 @@ if __name__ == '__main__':
     df_random = df_random.drop(*cols_to_drop)
     
     # Write data to HDFS
+    df_random.show(5)
+    
     df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir + "/cards.csv")
         
     print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! END !!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")    
