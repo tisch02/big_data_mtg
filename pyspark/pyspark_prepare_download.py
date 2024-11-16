@@ -42,7 +42,8 @@ if __name__ == '__main__':
     print("!!!!!!!!!!!!!!!!!!!! BEFORE !!!!!!!!!!!!!!!!!!!!!!!")
     
     # Drop columns that are not needed
-    df_random = df_random.drop(columns=['insert_date'])
+    cols_to_drop = ['insert_date']
+    df_random = df_random.drop(*cols_to_drop)
     
     print("!!!!!!!!!!!!!!!!!!!! AFTER DROP !!!!!!!!!!!!!!!!!!!!!!!")
     df_random.show(5)
