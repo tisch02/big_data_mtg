@@ -17,28 +17,30 @@ if __name__ == '__main__':
     """
     Main Function
     """
-    print("A")
     # Parse Command Line Args
     args = get_args()
 
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! B !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     # Initialize Spark Context
     sc = pyspark.SparkContext()
     spark = SparkSession(sc)
     
-    print(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! C !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     # Read ids from HDFS
     df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/*.tsv')
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Read !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print (df_ids)
+
+
     
     # TODO: Remove all elements that are already downloaded
     
+    print("!!!!!!!!!!!!!!!!!!!! BEFORE !!!!!!!!!!!!!!!!!!!!!!!")
+    
     # Select a random number of ids
-    #take = 20
-    #count = df_ids.count()
-    #number = take if count > take else count    
-    #df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
+    take = 20
+    count = df_ids.count()
+    number = take if count > take else count    
+    df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
+    
+    print("!!!!!!!!!!!!!!!!!!!! AFTER !!!!!!!!!!!!!!!!!!!!!!!")
+    df_random.show(5)
     
     # print("E")
     # Drop columns that are not needed
