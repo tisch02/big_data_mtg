@@ -31,7 +31,7 @@ if __name__ == '__main__':
     
     # TODO: Remove all elements that are already downloaded
     
-    print("!!!!!!!!!!!!!!!!!!!! BEFORE !!!!!!!!!!!!!!!!!!!!!!!")
+
     
     # Select a random number of ids
     take = 20
@@ -39,12 +39,13 @@ if __name__ == '__main__':
     number = take if count > take else count    
     df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
     
-    print("!!!!!!!!!!!!!!!!!!!! AFTER !!!!!!!!!!!!!!!!!!!!!!!")
-    df_random.show(5)
+    print("!!!!!!!!!!!!!!!!!!!! BEFORE !!!!!!!!!!!!!!!!!!!!!!!")
     
-    # print("E")
     # Drop columns that are not needed
-    #df_random = df_random.drop(columns=['insert_date'])
+    df_random = df_random.drop(columns=['insert_date'])
+    
+    print("!!!!!!!!!!!!!!!!!!!! AFTER DROP !!!!!!!!!!!!!!!!!!!!!!!")
+    df_random.show(5)
     
     #print("F")
     # Write data to HDFS
