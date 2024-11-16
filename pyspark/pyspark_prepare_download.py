@@ -1,7 +1,7 @@
 import pyspark
 from pyspark.sql import SparkSession
-import argparse
 from pyspark import SparkContext
+import argparse
 
 def get_args():
     """
@@ -21,30 +21,31 @@ if __name__ == '__main__':
     # Parse Command Line Args
     args = get_args()
 
-    print("B")
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! B !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     # Initialize Spark Context
     sc = pyspark.SparkContext()
     spark = SparkSession(sc)
     
-    print("C")
+    print(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! C !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     # Read ids from HDFS
     df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/*.tsv')
-    print ("D")
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Read !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print (df_ids)
     
     # TODO: Remove all elements that are already downloaded
     
     # Select a random number of ids
-    take = 20
-    count = df_ids.count()
-    number = take if count > take else count    
-    df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
+    #take = 20
+    #count = df_ids.count()
+    #number = take if count > take else count    
+    #df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
     
-    print("E")
+    # print("E")
     # Drop columns that are not needed
-    df_random = df_random.drop(columns=['insert_date'])
+    #df_random = df_random.drop(columns=['insert_date'])
     
-    print("F")
+    #print("F")
     # Write data to HDFS
-    df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
+    #df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
     
-    print("G")
+    #print("G")
