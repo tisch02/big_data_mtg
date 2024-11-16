@@ -25,15 +25,15 @@ if __name__ == '__main__':
     spark = SparkSession(sc)
     
     # Read ids from HDFS
-    df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/*.tsv')
+    #df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/*.tsv')
     
     # TODO: Remove all elements that are already downloaded
     
     # Select a random number of ids
-    df_random = df_ids.sample(n=args.count)
+    # df_random = df_ids.sample(n=args.count)
     
     # Drop columns that are not needed
-    df_random = df_random.drop(columns=['insert_date'])
+    # df_random = df_random.drop(columns=['insert_date'])
     
     # Write data to HDFS
-    df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
+    # df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
