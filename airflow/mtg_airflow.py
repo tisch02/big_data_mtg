@@ -172,7 +172,7 @@ pyspark_prepare_download = SparkSubmitOperator(
     num_executors='2',
     name='spark_prepare_download',
     verbose=True,
-    application_args=['--hdfs_source_dir', '/user/hadoop/mtg/ids', '--hdfs_target_dir', '/user/hadoop/mtg', '--count', '20'],
+    application_args=['--hdfs_source_dir', '/user/hadoop/mtg', '--hdfs_target_dir', '/user/hadoop/mtg/todownload', '--count', '20'],
     dag = dag
 )
 
@@ -185,4 +185,6 @@ pyspark_prepare_download = SparkSubmitOperator(
     create_hdfs_to_download_dir >> create_hive_to_download_ids,
     create_hdfs_downloaded_dir >> create_hive_downloaded_ids,
     postgres_create
-] >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> download_ids >> hdfs_put_ids_file >> mark_downloaded_set_ids >> pyspark_prepare_download
+] >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_ids >> hdfs_put_ids_file >> pyspark_prepare_download
+
+# mark_downloaded_cards >> pyspark_prepare_download
