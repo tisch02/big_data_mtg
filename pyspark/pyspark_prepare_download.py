@@ -21,8 +21,8 @@ if __name__ == '__main__':
     args = get_args()
 
     # Initialize Spark Context
-    sc = pyspark.SparkContext()
-    spark = SparkSession(sc)
+    # sc = pyspark.SparkContext()
+    # spark = SparkSession(sc)
     
     # Read ids from HDFS
     #df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/*.tsv')
