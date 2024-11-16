@@ -39,17 +39,15 @@ if __name__ == '__main__':
     number = take if count > take else count    
     df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
     
-    print("!!!!!!!!!!!!!!!!!!!! BEFORE !!!!!!!!!!!!!!!!!!!!!!!")
+    
     
     # Drop columns that are not needed
     cols_to_drop = ['insert_date']
     df_random = df_random.drop(*cols_to_drop)
     
-    print("!!!!!!!!!!!!!!!!!!!! AFTER DROP !!!!!!!!!!!!!!!!!!!!!!!")
-    df_random.show(5)
+    print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! BEFORE !!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")
     
-    #print("F")
     # Write data to HDFS
-    #df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
+    df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
     
-    #print("G")
+    print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! AFTER DROP !!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")    
