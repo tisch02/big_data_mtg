@@ -183,6 +183,6 @@ pyspark_prepare_download = SparkSubmitOperator(
     create_hdfs_set_names_dir,
     create_hdfs_ids_dir >> create_hive_table_ids,
     create_hdfs_to_download_dir >> create_hive_to_download_ids,
-    create_hive_downloaded_ids >> create_hive_downloaded_ids,
+    create_hdfs_downloaded_dir >> create_hive_downloaded_ids,
     postgres_create
 ] >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> download_ids >> hdfs_put_ids_file >> mark_downloaded_set_ids >> pyspark_prepare_download
