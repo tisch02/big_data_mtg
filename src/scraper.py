@@ -3,7 +3,9 @@ from bs4 import BeautifulSoup
 import urllib.request
 import pandas as pd
 
-class Scraper():
+from src.postgres import PostgresQL
+
+class Scraper():    
     
     @staticmethod
     def sets(html_str):        
@@ -73,21 +75,104 @@ class Scraper():
         return df
     
     @staticmethod
-    def cards(ids: list[int]):
-        cols = ["id", "url"]                   
+    def _get_row_content(soup: BeautifulSoup, id: str) -> str:
+        row = soup.find(id=id)
+        div = row.find_all("div", {"class": "value"})[0]
+        return div.get_text().replace("\r\n","").strip()
+    
+    @staticmethod
+    def _get_card_text(soup: BeautifulSoup) -> str | None:
+        """Scrapes the card text
+        """
+        # Return none if no text is on the card
+        row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_textRow")
+        if row is None:
+            return None
+        
+        # Get list text srings
+        strings = []
+        for row in row.find_all("div", {"class": "cardtextbox"}):
+            row_str = "".join([(f"@{e["alt"]}@" if "<img" in str(e) else str(e)) for e in row])
+            strings.append(row_str)
+        
+        # Concatenate string with linebreak
+        return "\r\n".join(strings)
+    
+    @staticmethod
+    def _get_card_story(soup: BeautifulSoup) -> str | None:
+        """Scrapes the falvour text
+        """
+        # Return none if no story is on the card
+        row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_flavorRow")
+        if row is None:
+            return None
+        
+        # Get list of story items
+        strings = []
+        for row in row.find_all("div", {"class": "flavortextbox"}):
+            row_str = "".join([str(e) for e in row])
+            strings.append(row_str)
+            
+        # Concatenate string with linebreak
+        return "\r\n".join(strings)
+    
+    @staticmethod
+    def _get_card_set(soup: BeautifulSoup) -> str:
+        row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_currentSetSymbol").find_all("a")
+        return row[1].get_text()
+        
+    @staticmethod
+    def _get_card_mana_val(soup: BeautifulSoup) -> int | None:
+        row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cmcRow")
+        if row is None:
+            return None
+                
+        return int(row.find_all("div", {"class": "value"})[0].get_text())
+    
+    @staticmethod
+    def _get_card_artist(soup: BeautifulSoup) -> int | None:    
+        row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ArtistCredit")
+        return str(row.find_all("a")[0].get_text())
+    
+    @staticmethod
+    def _get_card_image(soup: BeautifulSoup) -> int | None:    
+        img = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage")
+        return img["src"].replace("../..", "https://gatherer.wizards.com")
+    
+    @staticmethod
+    def _get_card_mana_cost(soup: BeautifulSoup) -> str | None:    
+        row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_manaRow")
+        if row is None:
+            return None
+
+        rows = row.find_all("div", {"class": "value"})[0].find_all("img")
+        row_str = "".join([f"@{row["alt"]}@" for row in rows])
+
+        return row_str
+    
+    @staticmethod
+    def cards(ids: list[int]) -> str:
+        cols = ["id", "name", "type", "mana_val", "mana_cost", "card_num", "set", "artist", "text", "story", "url", "img"]                   
         df = pd.concat([pd.DataFrame(data=Scraper.card(id), columns=cols, index=["id"]) for id in ids])        
-        print(df.head())
-            
-            
+        return len(df) if PostgresQL.insert_cards(df) else 0
     
     @staticmethod
     def card(id: int):
-        url = f"https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid={id}"
-        print(url)
-        # content = Scraper._get_html(url)
+        url = f"https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid={id}"        
+        content = Scraper._get_html(url)
         
+        soup = BeautifulSoup(content, 'html.parser')
         return {
             "id": id,
-            "url": url
+            "name": Scraper._get_row_content(soup, "ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_nameRow"),
+            "type": Scraper._get_row_content(soup, "ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_typeRow"),
+            "mana_val": Scraper._get_card_mana_val(soup),
+            "mana_cost": Scraper._get_card_mana_cost(soup),
+            "set": Scraper._get_card_set(soup),
+            "card_num": int(Scraper._get_row_content(soup, "ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_numberRow")),
+            "artist": Scraper._get_card_artist(soup),
+            "text": Scraper._get_card_text(soup),
+            "story": Scraper._get_card_story(soup),
+            "url": url,
+            "img": Scraper._get_card_image(soup)
         }
-        

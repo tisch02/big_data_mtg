@@ -64,14 +64,23 @@ def prepare_card_ids():
 
 @app.route("/api/download-cards")
 def download_cards():
-    ids = Hive.get_download_ids()
-        
+    #ids = Hive.get_download_ids()
+    ids = [603042, 182972, 446155, 643407]
+       
     if len(ids) == 0:
         return Response(response="There are no cards to scrape", status=400)
         
-    Scraper.cards(ids)
+    count = Scraper.cards(ids)
     
-    return Response(status=200)
+    if count == 0:
+        return Response(response="Error while scraping the cards", status=400)
+    
+    return Response(response=f"Scraped {count} cards ...", status=200)
+
+@app.route("/api/downloaded-cards")
+def downloaded_cards():
+    df = PostgresQL.downloaded_cards()
+    return df.to_csv(index=False, sep=",")
 
 if __name__ == '__main__':    
     PostgresQL.IP = IP

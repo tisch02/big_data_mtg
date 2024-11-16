@@ -1,8 +1,11 @@
 import psycopg2
 from flask import Response
+import pandas as pd
+from sqlalchemy import create_engine 
 
 class PostgresQL():
     CONN = None
+    ALQ_CONN = None
     IP = "postgres"
     
     @staticmethod
@@ -14,6 +17,15 @@ class PostgresQL():
         if PostgresQL.CONN is None:
             PostgresQL.CONN = psycopg2.connect(database="mtg", host=PostgresQL.IP, user="big_data", password="big_data", port="5432")
         return PostgresQL.CONN
+    
+    @staticmethod
+    def _get_alq_connection():
+        if PostgresQL.ALQ_CONN is None:
+            con_str = f"postgresql+psycopg2://big_data:big_data@{PostgresQL.IP}:5432/mtg"
+            db = create_engine(con_str)
+            conn = db.connect() 
+            PostgresQL.ALQ_CONN = conn
+        return PostgresQL.ALQ_CONN    
     
     @staticmethod
     def get_version():
@@ -37,6 +49,22 @@ class PostgresQL():
                         CREATE TABLE IF NOT EXISTS data.sets (
                             name VARCHAR(256) PRIMARY KEY,
                             downloaded BOOL
+                        );""")
+            
+            cur.execute("""
+                        CREATE TABLE IF NOT EXISTS data.cards (
+                            id INT PRIMARY KEY,
+                            name VARCHAR(256),
+                            type VARCHAR(256),
+                            mana_val INT,
+                            mana_cost VARCHAR(256),
+                            set VARCHAR(256),
+                            card_num INT,
+                            artist VARCHAR(256),
+                            text TEXT,
+                            story TEXT,
+                            url VARCHAR(1024),
+                            img VARCHAR(1024)
                         );""")
             conn.commit()  
         
@@ -112,3 +140,19 @@ class PostgresQL():
             
         except Exception as error:            
             return Response(response=str(error), status=400)
+        
+    @staticmethod
+    def insert_cards(cards_df: pd.DataFrame) -> bool:
+        try:            
+            conn = PostgresQL._get_alq_connection()            
+            cards_df.to_sql(name="cards", schema="data", con=conn, if_exists="replace", index=False)          
+            return True                                          
+        except Exception as error:
+            print(error)
+            return False
+
+    @staticmethod
+    def downloaded_cards() -> None:
+        conn = PostgresQL._get_alq_connection()
+        return pd.read_sql_query("SELECT id FROM data.cards", con=conn)
+        

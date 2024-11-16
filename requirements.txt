@@ -6,3 +6,4 @@ PyHive
 thrift==0.21.0
 thrift-sasl==0.4.3
 pandas==2.2.3
+sqlalchemy
