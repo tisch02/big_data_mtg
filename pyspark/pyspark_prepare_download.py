@@ -1,7 +1,6 @@
 import pyspark
 from pyspark.sql import SparkSession
 import argparse
-import org.apache.spark.sql.functions.rand
 
 def get_args():
     """
