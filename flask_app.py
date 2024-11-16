@@ -64,13 +64,12 @@ def prepare_card_ids():
 
 @app.route("/api/download-cards")
 def download_cards():
-    hdfs = Hadoop(ip=IP)    
-    file_content = hdfs.get_file("/user/hadoop/mtg/todownload/cards.csv")
+    ids = Hive.get_download_ids()
         
-    if file_content is None:
+    if len(ids) == 0:
         return Response(response="There are no cards to scrape", status=400)
         
-    Scraper.cards(file_content)
+    Scraper.cards(ids)
     
     return Response(status=200)
 

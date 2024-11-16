@@ -172,7 +172,7 @@ pyspark_prepare_download = SparkSubmitOperator(
     num_executors='2',
     name='spark_prepare_download',
     verbose=True,
-    application_args=['--hdfs_source_dir', '/user/hadoop/mtg', '--hdfs_target_dir', '/user/hadoop/mtg/todownload', '--count', '20'],
+    application_args=['--hdfs_source_dir', '/user/hadoop/mtg', '--hdfs_target_dir', '/user/hadoop/mtg/todownload', '--count', '3'],
     dag = dag
 )
 

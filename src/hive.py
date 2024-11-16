@@ -35,3 +35,10 @@ class Hive():
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT(set_name) FROM ids")
         return [x[0] for x in cur.fetchall()]
+    
+    @staticmethod
+    def get_download_ids():
+        conn = Hive._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM todownload")
+        return [x[0] for x in cur.fetchall()]

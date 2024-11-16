@@ -32,11 +32,9 @@ if __name__ == '__main__':
     
     
     # TODO: Remove all elements that are already downloaded
-    
-
-    
+        
     # Select a random number of ids
-    take = 20
+    take = args.count
     count = df_ids.count()
     number = take if count > take else count    
     df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
