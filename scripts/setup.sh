@@ -36,6 +36,8 @@ docker run -dit --name airflow -p 8080:8080 --net bigdatanet -v ~/shared/big_dat
 
 docker exec -it airflow bash
 
+cd /home/airflow/airflow/logs/MTG_Crawler/pyspark_prepare_download
+
 # http://35.198.76.213:8080/admin/
 
 # ---------------------

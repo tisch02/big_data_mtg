@@ -71,5 +71,17 @@ class Scraper():
             df = pd.concat([df, append_frame])
         
         return df
+    
+    @staticmethod
+    def cards(csv: str):  
+        df = pd.read_csv(csv)
         
+        for _, row in df.iterrows():
+            Scraper.card(row["id"])
+    
+    @staticmethod
+    def card(id: int):
+        url = f"https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid={id}"
+        print(url)
+        # content = Scraper._get_html(url)
         

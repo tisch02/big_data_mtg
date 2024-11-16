@@ -40,7 +40,7 @@ def hive_drop():
 def hadoop_read():
     hdfs = Hadoop(ip=IP)
     path = "/user/hadoop/mtg/sets/set_names.html"
-    names = Scraper.sets(hdfs.get_file(path))    
+    names = Scraper.sets(hdfs.get_file(path))
     return PostgresQL.store_sets(names)
 
 @app.route("/api/mark-stored-sets")
@@ -61,6 +61,18 @@ def prepare_card_ids():
         df = Scraper.card_ids(set_name)    
         return df.to_csv(index=False, sep="\t")
     return Response(response="There is no more set to dowload", status=400)
+
+@app.route("/api/download-cards")
+def download_cards():
+    hdfs = Hadoop(ip=IP)    
+    file_content = hdfs.get_file("/user/hadoop/mtg/todownload/cards.csv")
+        
+    if file_content is None:
+        return Response(response="There are no cards to scrape", status=400)
+        
+    Scraper.cards(file_content)
+    
+    return Response(status=200)
 
 if __name__ == '__main__':    
     PostgresQL.IP = IP
