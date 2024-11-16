@@ -24,6 +24,10 @@ class Scraper():
         soup = BeautifulSoup(html_content, 'html.parser')
         pagination = soup.find_all("div", {"class": "pagingcontrols"})[0].find_all("a")
         
+        # Return true if there are no cards
+        if len(pagination) == 0:
+            return True
+        
         # Check if last page in pagination. If so, stop loop
         last = str(pagination[-1].text).replace("\xa0", "")
         return last not in [">", ">>"]
