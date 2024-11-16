@@ -6,7 +6,7 @@ from src.postgres import PostgresQL
 from src.hive import Hive
 
 app = Flask(__name__)
-IP = "34.107.40.189"
+IP = "35.198.76.213"
 Hive.set_ip(IP)
 PostgresQL.set_ip(IP)
 
