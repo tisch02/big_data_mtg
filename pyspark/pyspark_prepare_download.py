@@ -48,6 +48,6 @@ if __name__ == '__main__':
     # Write data to HDFS
     df_random.show(5)
     
-    df_random.write.format('csv').mode('overwrite').coalesce(1).save(args.hdfs_target_dir + "/cards.csv")
+    df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
         
     print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! END !!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")    

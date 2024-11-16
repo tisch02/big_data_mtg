@@ -187,4 +187,4 @@ pyspark_prepare_download = SparkSubmitOperator(
     postgres_create
 ] >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_ids >> hdfs_put_ids_file >> pyspark_prepare_download
 
-# mark_downloaded_cards >> pyspark_prepare_download
+# mark_downloaded_cards >> download_cards
