@@ -28,8 +28,7 @@ if __name__ == '__main__':
     
     # Read ids from HDFS
     df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/ids/*.tsv')
-    df_downloaded = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/downloaded/*.tsv')
-
+    # df_downloaded = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/downloaded/*.tsv')
     
     
     # TODO: Remove all elements that are already downloaded
