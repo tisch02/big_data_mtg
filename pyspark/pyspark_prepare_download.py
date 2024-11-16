@@ -33,7 +33,7 @@ if __name__ == '__main__':
     take = 20
     count = df_ids.count()
     number = take if count > take else count    
-    df_random = df_ids.sample(0, 1.0*number/count).limit(take)
+    df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
     
     # Drop columns that are not needed
     df_random = df_random.drop(columns=['insert_date'])
