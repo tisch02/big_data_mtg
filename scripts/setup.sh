@@ -1,5 +1,11 @@
 #! /bin/bash
 
+cd ~/ && mkdir shared && cd shared && git clone https://github.com/tisch02/big_data_mtg.git && cd big_data_mtg && git pull
+
+docker network create -d bridge bigdatanet && docker pull marcelmittelstaedt/spark_base:latest && docker pull python:3.12.7-bookworm && docker pull marcelmittelstaedt/airflow:latest && docker pull postgres:latest
+
+# --------------------
+
 
 # TODO: Allo http/https traffic for VM
 # Configure Port 8080 in Firewall http configuration
