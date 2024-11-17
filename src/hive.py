@@ -39,5 +39,5 @@ class Hive():
     def get_download_ids():
         conn = Hive._get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id FROM todownload")        
-        return [x[0] for x in cur.fetchall()]
+        cur.execute("SELECT id, set_name FROM todownload")        
+        return [(x[0], x[1]) for x in cur.fetchall()]

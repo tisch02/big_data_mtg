@@ -171,11 +171,11 @@ class Scraper():
         return row_str
     
     @staticmethod
-    def cards(ids: list[int]) -> str:
+    def cards(ids: list[tuple[int, str]]) -> str:
         cols = ["id", "name", "type", "mana_val", "mana_cost", "card_num", "set", "artist", "text", "story", "url", "img"]
         
         cards = []
-        for id in ids:
+        for id, set_name in ids:
             try:
                 cards += [pd.DataFrame(data=Scraper.card(id), columns=cols, index=["id"])]
             except Exception as ex:
@@ -184,7 +184,8 @@ class Scraper():
                 
                 error_data = {
                     "id": id,
-                    "name": "ERROR!"
+                    "name": "ERROR!",
+                    "set": set_name
                 }
                 cards += [pd.DataFrame(data=error_data, columns=cols, index=["id"])]
         

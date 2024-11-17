@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 
 class PostgresQL():
     CONN = None
-    ALQ_CONN = None
+    ALQ_ENG = None
     
     @staticmethod
     def get_ip() -> str:
@@ -18,13 +18,11 @@ class PostgresQL():
         return PostgresQL.CONN
     
     @staticmethod
-    def _get_alq_connection():
-        if PostgresQL.ALQ_CONN is None:
-            con_str = f"postgresql+psycopg2://big_data:big_data@{PostgresQL.get_ip()}:5432/mtg"
-            db = create_engine(con_str)
-            conn = db.connect() 
-            PostgresQL.ALQ_CONN = conn
-        return PostgresQL.ALQ_CONN    
+    def _get_alq_engine():
+        if PostgresQL.ALQ_ENG is None:
+            con_str = f"postgresql+psycopg2://big_data:big_data@{PostgresQL.get_ip()}:5432/mtg"            
+            PostgresQL.ALQ_ENG = create_engine(con_str)     
+        return PostgresQL.ALQ_ENG    
     
     @staticmethod
     def get_version():
@@ -142,12 +140,12 @@ class PostgresQL():
             return Response(response=str(error), status=400)
         
     @staticmethod
-    def insert_cards(cards_df: pd.DataFrame) -> bool:
-        print("INSERT CAAAAARDSSS !!!!!!!!!!!!!!!!!!!!!!!")
+    def insert_cards(cards_df: pd.DataFrame) -> bool:        
         try:            
-            conn = PostgresQL._get_alq_connection()            
+            conn = PostgresQL._get_alq_engine().connect() 
             cards_df.to_sql(name="cards", schema="data", con=conn, if_exists="append", index=False)
             conn.commit()
+            conn.close()
             return True                                          
         except Exception as error:
             print(error)
@@ -155,6 +153,35 @@ class PostgresQL():
 
     @staticmethod
     def downloaded_cards() -> None:
-        conn = PostgresQL._get_alq_connection()
-        return pd.read_sql_query("SELECT id, set FROM data.cards", con=conn)
+        conn = PostgresQL._get_alq_engine().connect() 
+        result = pd.read_sql_query("SELECT id, set FROM data.cards", con=conn)
+        conn.close()
+        return result
+    
+    # Frontend methods -----------------------------------------------
+    
+    @staticmethod
+    def search_cards(search_str: str, count: str):
+        
+        
+        query = """
+            CREATE EXTENSION IF NOT EXISTS pg_trgm;
+            SELECT id, name, type, mana_cost, set, img, SIMILARITY(name, %s) AS sim FROM data.cards WHERE name != 'ERROR!' ORDER BY sim DESC LIMIT %s;
+        """
+        
+        conn = PostgresQL._get_connection()
+        cur = conn.cursor()
+        
+        cur.execute(query, (search_str, count))
+        
+        
+        return [{
+            "id": element[0],
+            "name": element[1],
+            "type": element[2],
+            "mana_cost": element[3],
+            "set": element[4],
+            "img": element[5],
+            "sim": element[6]
+        } for element in cur.fetchall()]
         

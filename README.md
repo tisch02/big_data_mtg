@@ -12,7 +12,14 @@ curl "http://34e0454c2314:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op
 curl "http://34e0454c2314:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op=OPEN&namenoderpcaddress=34.89.168.124:9000&offset=0"
 
 
-curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op=OPEN&namenoderpcaddress=hadoop:9000"
+part-00000-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv
+curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/_SUCCESS?op=OPEN&namenoderpcaddress=hadoop:9000"
+curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00000-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
+curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00001-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
+curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00002-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
+curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00003-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
+
+
 curl "http://35.198.76.213:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op=OPEN&namenoderpcaddress=35.198.76.213:9000"
 
 http://34.89.168.124/

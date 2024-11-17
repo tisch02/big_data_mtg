@@ -11,7 +11,7 @@ docker run -dit --name hadoop -p 8088:8088 -p 9870:9870 -p 9864:9864 -p 10000:10
 
 # Configure user in postgres database by running the following steps after each other
 docker exec -it postgres bash -c "psql -h localhost -p 5432 -U postgres"
-CREATE DATABASE mtg; CREATE USER big_data WITH ENCRYPTED PASSWORD 'big_data'; GRANT ALL PRIVILEGES ON DATABASE mtg TO big_data;
+CREATE DATABASE mtg; CREATE USER big_data WITH ENCRYPTED PASSWORD 'big_data'; GRANT ALL PRIVILEGES ON DATABASE mtg TO big_data; CREATE EXTENSION pg_trgm;
 exit
 
 # Install python container and run flask app

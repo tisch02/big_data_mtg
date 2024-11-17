@@ -43,8 +43,7 @@ def hadoop_read():
 
 @app.route("/api/mark-stored-sets")
 def stored_sets():
-    set_names = Hive.get_sets()
-    print(set_names)
+    set_names = Hive.get_sets()    
     PostgresQL.mark_stored_sets(set_names)
     return ", ".join(set_names)
 
@@ -53,7 +52,6 @@ def prepare_card_ids():
     # TODO: Only return if a certain amount of undownloaded cards is passed
     
     set_name = PostgresQL.get_set_name()
-    print(set_name)
     
     if set_name is not None:
         df = Scraper.card_ids(set_name)    
@@ -62,8 +60,7 @@ def prepare_card_ids():
 
 @app.route("/api/download-cards")
 def download_cards():
-    ids = Hive.get_download_ids()    
-    # ids = [603042, 182972, 446155, 643407, 423747, 547771, 3193, 527404, 3048]    
+    ids = Hive.get_download_ids()
        
     if len(ids) == 0:
         return Response(response="There are no cards to scrape", status=400)
