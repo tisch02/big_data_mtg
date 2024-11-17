@@ -6,22 +6,21 @@ from sqlalchemy import create_engine
 class PostgresQL():
     CONN = None
     ALQ_CONN = None
-    IP = "postgres"
     
     @staticmethod
-    def set_ip(ip: str):
-        PostgresQL.IP = ip
-    
+    def get_ip() -> str:
+        return "postgres"
+
     @staticmethod
-    def _get_connection():
+    def _get_connection():        
         if PostgresQL.CONN is None:
-            PostgresQL.CONN = psycopg2.connect(database="mtg", host=PostgresQL.IP, user="big_data", password="big_data", port="5432")
+            PostgresQL.CONN = psycopg2.connect(database="mtg", host=PostgresQL.get_ip(), user="big_data", password="big_data", port="5432")
         return PostgresQL.CONN
     
     @staticmethod
     def _get_alq_connection():
         if PostgresQL.ALQ_CONN is None:
-            con_str = f"postgresql+psycopg2://big_data:big_data@{PostgresQL.IP}:5432/mtg"
+            con_str = f"postgresql+psycopg2://big_data:big_data@{PostgresQL.get_ip()}:5432/mtg"
             db = create_engine(con_str)
             conn = db.connect() 
             PostgresQL.ALQ_CONN = conn
@@ -70,7 +69,8 @@ class PostgresQL():
         
             return Response(status=200)
             
-        except:
+        except Exception as ex:
+            print(ex)
             return Response(status=400)
     
     @staticmethod
@@ -143,9 +143,11 @@ class PostgresQL():
         
     @staticmethod
     def insert_cards(cards_df: pd.DataFrame) -> bool:
+        print("INSERT CAAAAARDSSS !!!!!!!!!!!!!!!!!!!!!!!")
         try:            
             conn = PostgresQL._get_alq_connection()            
-            cards_df.to_sql(name="cards", schema="data", con=conn, if_exists="replace", index=False)          
+            cards_df.to_sql(name="cards", schema="data", con=conn, if_exists="append", index=False)
+            conn.commit()
             return True                                          
         except Exception as error:
             print(error)
@@ -154,5 +156,5 @@ class PostgresQL():
     @staticmethod
     def downloaded_cards() -> None:
         conn = PostgresQL._get_alq_connection()
-        return pd.read_sql_query("SELECT id FROM data.cards", con=conn)
+        return pd.read_sql_query("SELECT id, set FROM data.cards", con=conn)
         

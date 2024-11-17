@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
-# from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.filesystem_operations import CreateDirectoryOperator, ClearDirectoryOperator
 from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsMkdirFileOperator
@@ -79,6 +79,13 @@ download_ids = HttpDownloadOperator(
     dag=dag,
 )
 
+download_downloaded_cards = HttpDownloadOperator(
+    task_id='download_downloaded_cards',
+    download_uri='http://python:38383/api/downloaded-cards',
+    save_to=f'/home/airflow/downloads/downloaded_cards.csv',
+    dag=dag,
+)
+
 create_hdfs_set_names_dir = HdfsMkdirFileOperator(
     task_id='create_hdfs_set_names_dir',
     directory='/user/hadoop/mtg/sets',
@@ -123,6 +130,14 @@ hdfs_put_ids_file = HdfsPutFileOperator(
     dag=dag,
 )
 
+hdfs_put_downloaded_cards_file = HdfsPutFileOperator(
+    task_id='hdfs_put_downloaded_cards_file',
+    local_file=f'/home/airflow/downloads/downloaded_cards.csv',
+    remote_file=f'/user/hadoop/mtg/downloaded/cards.csv',
+    hdfs_conn_id='hdfs',
+    dag=dag,
+)
+
 postgres_create = BashOperator(
     task_id='postgres_create',
     bash_command='curl http://python:38383/api/postgres-create',
@@ -138,6 +153,12 @@ store_set_names = BashOperator(
 mark_downloaded_set_ids = BashOperator(
     task_id='mark_downloaded_set_ids',
     bash_command='curl http://python:38383/api/mark-stored-sets',
+    dag=dag
+)
+
+download_cards = BashOperator(
+    task_id='download_cards',
+    bash_command='curl http://python:38383/api/download-cards',
     dag=dag
 )
 
@@ -176,6 +197,14 @@ pyspark_prepare_download = SparkSubmitOperator(
     dag = dag
 )
 
+dummy_op = DummyOperator(
+        task_id='dummy', 
+        dag=dag)
+
+dummy_op_2 = DummyOperator(
+        task_id='dummy_2', 
+        dag=dag)
+
 # Flow -------------------------------------------------------------
 
 [
@@ -185,6 +214,10 @@ pyspark_prepare_download = SparkSubmitOperator(
     create_hdfs_to_download_dir >> create_hive_to_download_ids,
     create_hdfs_downloaded_dir >> create_hive_downloaded_ids,
     postgres_create
-] >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_ids >> hdfs_put_ids_file >> pyspark_prepare_download
+] >> dummy_op
 
-# mark_downloaded_cards >> download_cards
+
+dummy_op >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_ids >> hdfs_put_ids_file >> dummy_op_2
+dummy_op >> download_downloaded_cards >> hdfs_put_downloaded_cards_file >> dummy_op_2
+
+dummy_op_2 >> pyspark_prepare_download >> download_cards

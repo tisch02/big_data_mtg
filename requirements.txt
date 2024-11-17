@@ -1,6 +1,6 @@
 beautifulsoup4==4.12.3
 Flask==3.0.3
-request
+requests
 psycopg2==2.9.10
 PyHive
 thrift==0.21.0

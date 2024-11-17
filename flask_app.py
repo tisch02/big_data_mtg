@@ -6,9 +6,7 @@ from src.postgres import PostgresQL
 from src.hive import Hive
 
 app = Flask(__name__)
-IP = "35.198.76.213"
-Hive.set_ip(IP)
-PostgresQL.set_ip(IP)
+IP = "127.0.0.1"
 
 @app.route("/api/test")
 def test():
@@ -38,7 +36,7 @@ def hive_drop():
 
 @app.route("/api/set-names")
 def hadoop_read():
-    hdfs = Hadoop(ip=IP)
+    hdfs = Hadoop()
     path = "/user/hadoop/mtg/sets/set_names.html"
     names = Scraper.sets(hdfs.get_file(path))
     return PostgresQL.store_sets(names)
@@ -64,8 +62,8 @@ def prepare_card_ids():
 
 @app.route("/api/download-cards")
 def download_cards():
-    #ids = Hive.get_download_ids()
-    ids = [603042, 182972, 446155, 643407]
+    ids = Hive.get_download_ids()    
+    # ids = [603042, 182972, 446155, 643407, 423747, 547771, 3193, 527404, 3048]    
        
     if len(ids) == 0:
         return Response(response="There are no cards to scrape", status=400)
@@ -80,6 +78,7 @@ def download_cards():
 @app.route("/api/downloaded-cards")
 def downloaded_cards():
     df = PostgresQL.downloaded_cards()
+    df = df.rename(columns={"set": "set_name"})
     return df.to_csv(index=False, sep=",")
 
 if __name__ == '__main__':    

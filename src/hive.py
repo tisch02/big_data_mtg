@@ -2,16 +2,15 @@ from pyhive import hive
 
 class Hive():
     CONN = None
-    IP = "34.159.43.81"
-    
+
     @staticmethod
-    def set_ip(ip: str):
-        Hive.IP = ip
+    def get_ip():
+        return "hadoop"
     
     @staticmethod
     def _get_connection():
         if Hive.CONN is None:
-            Hive.CONN = hive.Connection(host=Hive.IP, port=10000, username="hadoop")
+            Hive.CONN = hive.Connection(host=Hive.get_ip(), port=10000, username="hadoop")
         return Hive.CONN
     
     @staticmethod
@@ -40,5 +39,5 @@ class Hive():
     def get_download_ids():
         conn = Hive._get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id FROM todownload")
+        cur.execute("SELECT id FROM todownload")        
         return [x[0] for x in cur.fetchall()]

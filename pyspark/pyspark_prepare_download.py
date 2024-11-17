@@ -24,28 +24,25 @@ if __name__ == '__main__':
     sc = pyspark.SparkContext()
     spark = SparkSession(sc)
     
-    print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! START !!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")    
-    
-    # Read ids from HDFS
+    print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! START !!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")
+
+    # Read ids from HDFS    
     df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/ids/*.tsv')
-    # df_downloaded = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/downloaded/*.tsv')
+    df_downloaded = spark.read.format('csv').options(header='true', delimiter=',', inferschema='true').load(args.hdfs_source_dir + '/downloaded/*.csv')    
     
+    # Remove all elements that are already downloaded
+    cols = ['id', 'set_name']
+    id_dif = df_ids.select(*cols).subtract(df_downloaded.select(*cols)).collect()    
     
-    # TODO: Remove all elements that are already downloaded
-        
-    # Select a random number of ids
-    take = args.count
-    count = df_ids.count()
-    number = take if count > take else count    
-    df_random = df_ids.sample(fraction=float(1.0*number/count)).limit(take)
+    # Select firt n elements of list
+    num = int(args.count)
+    if int(args.count) > len(id_dif):
+        num = len(id_dif)
     
-    # Drop columns that are not needed
-    cols_to_drop = ['insert_date']
-    df_random = df_random.drop(*cols_to_drop)
+    df_result = spark.createDataFrame(id_dif[0:num])
     
-    # Write data to HDFS
-    df_random.show(5)
+    # Write result    
+    df_result.write.format('csv').options(header='True').mode('overwrite').save(args.hdfs_target_dir)
     
-    df_random.write.format('csv').mode('overwrite').save(args.hdfs_target_dir)
-        
     print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! END !!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")    
+    df_result.show()
