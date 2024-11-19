@@ -21,9 +21,8 @@ function search_enter(e) {
 function change_select() {
     var e = document.getElementById(ID_SELECT_SEARCH);
     console.log(e.value);
-    
+
     search()
-    
 }
 
 function search() {
@@ -34,7 +33,7 @@ function search() {
     window.location.href = get_base_url() + "?" + params.join("&")
 }
 
-function page_load() {    
+function page_load() {
     const urlParams = new URLSearchParams(window.location.search);
 
     const search_str = urlParams.get("search")
@@ -51,7 +50,6 @@ function page_load() {
 
 function fetch_data(search_string, search_target) {
     // Show loading animation
-    
     document.getElementById(ID_DIV_CONTENT_AREA).innerHTML = LOADING_HTML
 
     // Fetch the data
@@ -75,8 +73,8 @@ function show_detail(id, name) {
     fetch(request)
         .then((response) => response.text())
         .then((text) => {
-            document.getElementById(ID_MODAL_CONTENT).innerHTML = render_modal_content(JSON.parse(text))            
-        });    
+            document.getElementById(ID_MODAL_CONTENT).innerHTML = render_modal_content(JSON.parse(text))
+        });
 }
 
 function render_modal_content(card) {
@@ -130,7 +128,6 @@ function render_modal_content(card) {
             </table>
         </div>        
     </div>
-
     `
 }
 
@@ -143,33 +140,33 @@ function render_cost(mana, cost) {
 }
 
 function render_text(text) {
-    if (text == null){
+    if (text == null) {
         return "/"
     }
 
     var ret_str = ""
     text.split("\r\n").forEach((str) => {
         ret_str += `<p class="m-0 p-0">${str}</p>`
-    })    
+    })
 
     return `<div class="d-flex flex-column gap-2">${render_mana_icons(ret_str, "16em")}</div>`
 }
 
 function render_story(story) {
-    if (story == null){
+    if (story == null) {
         return "/"
     }
 
     var ret_str = ""
     story.replace("—", "\r\n—").split("\r\n").forEach((str) => {
         ret_str += `<p class="m-0 p-0">${str}</p>`
-    })    
-    
+    })
+
     return `<div class="d-flex flex-column gap-1"><i>${ret_str}</i></div>`
 }
 
 function show_detail_modal() {
-    const detail_modal = new bootstrap.Modal(document.getElementById(ID_MODAL_DETAIL), {})    
+    const detail_modal = new bootstrap.Modal(document.getElementById(ID_MODAL_DETAIL), {})
     detail_modal.show("")
 }
 
@@ -200,7 +197,7 @@ const ICON_MAP = {
     "Variable Colorless": "X"
 }
 
-function render_mana_icons(str, width="20em") {
+function render_mana_icons(str, width = "20em") {
     if (str == null) {
         return "/"
     }

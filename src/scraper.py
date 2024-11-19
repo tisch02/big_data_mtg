@@ -47,14 +47,11 @@ class Scraper():
         page_num = 0
         stop = False
         results = []
-        
+
         # Return empty df if no card ids are to scrape
         if set_name is None:
             return df
-        
-                 
-        
-    
+
         while not stop:
             # Concatenate URL with card search query and page number
             url = f"https://gatherer.wizards.com/Pages/Search/Default.aspx?page={page_num}"

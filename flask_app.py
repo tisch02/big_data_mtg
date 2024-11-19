@@ -1,4 +1,3 @@
-from datetime import datetime
 from flask import Flask, Response
 from src.scraper import Scraper
 from src.hadoop import Hadoop
@@ -6,7 +5,6 @@ from src.postgres import PostgresQL
 from src.hive import Hive
 
 app = Flask(__name__)
-IP = "127.0.0.1"
 
 @app.route("/api/test")
 def test():

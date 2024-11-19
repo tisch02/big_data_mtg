@@ -1,6 +1,8 @@
 # Big Data MTG Crawler
 
-For task and lecture reference, see: [GitHub Repo](https://github.com/marcelmittelstaedt/BigData/)
+- Tino Schaare (1299322) - [inf22001@lehre.dhbw-stuttgart.de](mailto:inf22001@lehre.dhbw-stuttgart.de)
+- DHBW Stuttgart Informatik, Jahrgang 2022, Wahlfach Big Data
+- For task and lecture reference, see: [GitHub Repo](https://github.com/marcelmittelstaedt/BigData/)
 
 ## Documentation
 
@@ -53,13 +55,25 @@ Thus, $D$ is a set of cards that still have to be downloaded. All cards in $D$ a
 
 Due to the educational purpose, different steps use different techniques, even though all could have been implemented using the same procedure.
 
+![airflow workflow](./static/img/workflow.png)
+
 Explenation of all Airflow DAG steps:
 
 - **create_download_dir** and **clear_download_dir**: Creates an directory in the local airflow filesytem (not HDFS), where downloaded files can be stored before they are moved to their final destination.
-- **reate_hdfs_set_names_dir**: HDFS directory for storing a downloaded .html file. This file is later used to scrape a list of all available sets on MTG Gatherer.
-- **create_hdfs_ids_dir** + **create_hive_table_ids**: HDFS directory with matching Hive table that contains .tsv files. They hold a list of 
-- **reate_hdfs_to_download_dir** + **create_hive_to_download_ids**: 
-- **create_hdfs_downloaded_dir** + **create_hive_downloaded_ids**:
+- **create_hdfs_set_names_dir**: HDFS directory for storing a downloaded .html file. This file is later used to scrape a list of all available sets on MTG Gatherer.
+- **create_hdfs_ids_dir** + **create_hive_table_ids**: Creation of HDFS directory with matching Hive table for .tsv files. This directory later hold a set of card ids and matching set names. This tables functions as a bacllog of scrapeable cards.
+- **reate_hdfs_to_download_dir** + **create_hive_to_download_ids**: Creation of HDFS directory with matching Hive table for PySpark generated .csv files. This directory will later hold a set of "prepared cards" in each run that will be scraped shortly after.
+- **create_hdfs_downloaded_dir** + **create_hive_downloaded_ids**: Creation of HDFS directory with matching Hive table for .csv files. This directory will later hold a set of card ids and matching set names that are already downloaded and in the end-user database.
+- **postgres_create**: Creates the `ids` and `cards` tables in the end-user PostgreSQL database.
+- **dummp_split**: Waits for the finish of all preperation tasks and splits the DAG into two parallel pathes.
+- **download_donwloaded_cards** + **hdfs_put_downloaded_cards_files**: The task calls the `/api/downloaded-cards` enpoint. This will generate a CSV text with all cards that are present in the end-user database. The file is saved to the local airflow directory and put in HDFS afterwards, by the second operator.
+- **download_set_names** + **hdfs_put_set_names_file**: Scapres the MTG Gatherer main pages and saves in two steps into the prepared HDFS directory.
+- **store_set_names**: Calls the `/api/store-set-names` endpoint which retrieves the just scraped MTG Gatherer main pages via the Hadoop REST Api. This is then parsed with the Pyton Beautiful-Library. Therby, all set names are extracted. Therer are then stored to the end-user PostgreSQL database by appending only new elements. Each new element is enriched with a "downloaded" field which is set to `false` by insertion of a new element.
+- **mark_downloaded_set_ids**: Calls the `/api/mark-stored-sets` endpoint. By using Hive with MapReduce, this will query a distinct set of set names, which card IDs are already added to the card backlog. Every set in this distinc list, will be marked as "donwloaded" in the end-user database. This will ensure that the same card IDs are not added twich to the card ID backlog.
+- **download_set_ids** + **hdfs_put_ids_file**: Calls the `/api/get-set-ids` endpoint and stores the result. This will take a set name that is not dowloaded, scrape all its card IDs from the paginated MTG gatherer web pages and then returns them as a CSV text. This result will be saved as a .csv file and then moved to its HDFS directory.
+- **dummy_collect**: This operator waits for the two strands to both finish.
+- **pyspakr_prepare_download**: At this point, one Hive table contains a list of card IDs that are already in the end user datbase (mark_downloaded_set_ids operator), and another Hive table contains a list of all cards that are scrapeable. This PySpark transformation now substracts the list of already donwlaoded cards from the list of donwnloadable cards, and selects a certain number of cards of this difference. These selected cards are then stored to another Hive table. These are pepared to be downloaded next.
+- **download_cards**: Calls the `/api/download_cards` endpoint. This will query the card IDs that were prepared for donwload by the PySpark transformation beforhand. Each card is scraped with all its detail from MTG Gatherer and added to the final card list in the end-user database.
 
 ### Frontend
 
@@ -213,37 +227,3 @@ docker rmi marcelmittelstaedt/spark_base:latest && docker rmi python:3.12.7-book
 If running the project, e.g. on a Google-Cloud VM, the following ports have to be exposed:
 
 - 80 (443) for the Web-Frontend
-
-### Get file from HDFS 
-curl "http://34e0454c2314:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op=OPEN&namenoderpcaddress=hadoop:9000&offset=0"
-curl "http://34e0454c2314:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op=OPEN&namenoderpcaddress=34.89.168.124:9000&offset=0"
-
-
-part-00000-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv
-curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/_SUCCESS?op=OPEN&namenoderpcaddress=hadoop:9000"
-curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00000-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
-curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00001-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
-curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00002-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
-curl "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/todownload/part-00003-79b743d4-4a38-40d4-b237-2ba3db29778c-c000.csv?op=OPEN&namenoderpcaddress=hadoop:9000"
-
-
-curl "http://35.198.76.213:9864/webhdfs/v1/user/hadoop/mtg/sets/set_names.html?op=OPEN&namenoderpcaddress=35.198.76.213:9000"
-
-http://34.89.168.124/
-curl -i -X PUT "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/sets/test.txt?op=CREATE&namenoderpcaddress=hadoop:9000"
-
-curl -i -X PUT "http://<HOST>:<PORT>/webhdfs/v1/<PATH>?op=CREATE
-                    [&overwrite=<true|false>][&blocksize=<LONG>][&replication=<SHORT>]
-                    [&permission=<OCTAL>][&buffersize=<INT>]"
-
-
-curl -i -X DELETE http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/ids/set_ids_230cd64a-88fc-4ef6-a531-e2edcae528d3.tsv?user.name=hadoop&op=DELETE&recursive=true&namenoderpcaddress=hadoop:9000
-curl -i -X PUT    "http://hadoop:9864/webhdfs/v1/user/hadoop/mtg/sets/test.txt?op=CREATE&namenoderpcaddress=hadoop:9000"
-
-curl -X GET "http://35.198.76.213:9864/webhdfs/v1/user/hadoop/mtg/todownload?op=LISTSTATUS&recursive=true"
-curl -X GET "http://erie1.example.com:50070/webhdfs/v1/user/admin?op=LISTSTATUS&recursive=true"
-
-
-
-
-    

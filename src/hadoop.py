@@ -11,8 +11,3 @@ class Hadoop():
         if response.status_code == 200:
             return response.text
         return None
-
-    def create_file(self, path: str, file_name: str, content: str) -> None:
-        url = f"http://{self.ip}:9864/webhdfs/v1{path}/{file_name}?op=CREATE&namenoderpcaddress={self.ip}:9000"
-            
-        

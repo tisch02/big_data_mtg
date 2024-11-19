@@ -230,7 +230,6 @@ dummy_collect = DummyOperator(
     postgres_create
 ] >> dummy_split
 
-
 dummy_split >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_set_ids >> hdfs_put_ids_file >> dummy_collect
 dummy_split >> download_downloaded_cards >> hdfs_put_downloaded_cards_file >> dummy_collect
 
