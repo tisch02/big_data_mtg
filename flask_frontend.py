@@ -29,6 +29,5 @@ def api_card():
     
     return PostgresQL.get_card(id)     
 
-if __name__ == '__main__':    
-    print("Hallo, Welt!")
+if __name__ == '__main__':        
     app.run(host="0.0.0.0", port=80, debug=True)

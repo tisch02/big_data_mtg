@@ -11,6 +11,7 @@ IP = "127.0.0.1"
 @app.route("/api/test")
 def test():
     """Tests the PostgrSQL and Hive connection."""
+    print("Start: test")
     try: 
         # Test all connections
         hive_version = Hive.get_version()
@@ -26,6 +27,7 @@ def test():
 @app.route("/api/postgres-create")
 def postgres_create():
     """Creates all needed PostgreSQL tables if the don't exist"""
+    print("Start: postgres-create")
     try:
         PostgresQL.create_tables()
         return Response(status=200)
@@ -35,6 +37,7 @@ def postgres_create():
 @app.route("/api/store-set-names")
 def store_set_names():
     """Stores all set names into PostgreSQL"""
+    print("Start: store-set-names")
     try:
         hdfs = Hadoop()
         path = "/user/hadoop/mtg/sets/set_names.html"
@@ -48,6 +51,7 @@ def store_set_names():
 @app.route("/api/mark-stored-sets")
 def mark_stored_sets():
     """Marks all sets in the PostgreSQL which names are in the Hive table"""
+    print("Start: mark-stored-sets")
     try:
         set_names = Hive.get_sets()    
         PostgresQL.mark_stored_sets(set_names)
@@ -59,6 +63,7 @@ def mark_stored_sets():
 @app.route("/api/get-set-ids")
 def get_set_ids():
     """Scapres a list of card ids for a set."""
+    print("Start: get-set-ids")
     try:
         set_name = PostgresQL.get_set_name()
         df = Scraper.card_ids(set_name)    
@@ -69,7 +74,11 @@ def get_set_ids():
 @app.route("/api/download-cards")
 def download_cards():
     """Dowloads and stores iformation of all cards that should be downloaded."""
-    ids = Hive.get_download_ids()
+    print("Start: download-cards")
+    try:
+        ids = Hive.get_download_ids()
+    except:
+        return Response(response="Hive error", status=500)
        
     if len(ids) == 0:
         return Response(response="There are no cards to scrape", status=400)
@@ -84,6 +93,7 @@ def download_cards():
 @app.route("/api/downloaded-cards")
 def downloaded_cards():
     """Gets a list of all cards that are downloaded."""
+    print("Start: downloaded-cards")
     try:
         df = PostgresQL.downloaded_cards()
         df = df.rename(columns={"set": "set_name"})

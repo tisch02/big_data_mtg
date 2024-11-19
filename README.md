@@ -20,13 +20,80 @@ Why use a seperate **Flask (Backend) container** event though the **Airflow cont
 
 ### ETL Explanation
 
-The ETL workflow runs every 10 minutes. With every run, 10 more cards are added to the end-user database which is accessable via the web UI.
+The ETL workflow runs every 10 minutes. With every run, more cards are added to the end-user database which is accessable via the web UI. The whole process can be split into three steps:
 
-### Aiflow DAG overview
+1. Get a list of **set names**.
+2. For each set name, get a **list of card IDs** that are in the set and add them to a backlog.
+3. Continiously donwload cards from the card backlog.
+
+#### (1) Set Names
+
+At the main page of MTG gatherer, there is a dropdown with all set names. In this first, step this list is crawled and saved with a boolean value if the set is downloaded. This is done every run. If a new set name is added, it will be appended to the database.
+
+![gatherer main page](./static/img/gatherer_main_page.png)
+
+#### (2) Card-ID list
+
+With a set name, a MTG gatherer url can be build that leads to a table of cards that a in a given set. The problem is, that this table is paginated. Thus, this second step starts with the first page, download all card ids that are encoded in the link behind the card name, and then continous with the next page until the last page is reached. All these ids are stored.Afterwards, the corresponding set is marked as downloaded. This is done every run until all sets are marked as downloaded.
+
+![gatherer card ids](./static/img/gatherer_card_ids.png)
+
+#### (3) Card download
+
+Let $X$ be the set of all card IDs that are downloaded. And let $Y$ be the set of all card ids retrieved by step (2). $X$ and $Y$ are calcualted in every run before this step. Every run, a random subset $D$ of $x \in \mathbb{N}$ cards is taken:
+$$
+    D \subseteq Y \setminus X, \quad |D| = x
+$$
+
+Thus, $D$ is a set of cards that still have to be downloaded. All cards in $D$ are scraped and processed. Finnaly, their information is added to the PostgreSQL database.
+
+![gatherer card](./static/img/gatherer_card.png)
+
+### Aiflow DAG and Job/Transformations
 
 Due to the educational purpose, different steps use different techniques, even though all could have been implemented using the same procedure.
 
-#### Backend API
+Explenation of all Airflow DAG steps:
+
+- **create_download_dir** and **clear_download_dir**: Creates an directory in the local airflow filesytem (not HDFS), where downloaded files can be stored before they are moved to their final destination.
+- **reate_hdfs_set_names_dir**: HDFS directory for storing a downloaded .html file. This file is later used to scrape a list of all available sets on MTG Gatherer.
+- **create_hdfs_ids_dir** + **create_hive_table_ids**: HDFS directory with matching Hive table that contains .tsv files. They hold a list of 
+- **reate_hdfs_to_download_dir** + **create_hive_to_download_ids**: 
+- **create_hdfs_downloaded_dir** + **create_hive_downloaded_ids**:
+
+### Frontend
+
+The frontend is a single page web UI. The UI features a searching bar with a target selection. The target specifies, if the search is applied to the card name, card artist or card text.
+
+After submitting the search, the provided information is send towards the `/api/search` endpoint. This queries the end-user database by using a similarity measure of two strings. A list with card information is returend, that is ordered by the similarity of the search target to the search query. This list is then displayed in the UI, wheras a similarity threshold prohibits really bad matches to be displayed.
+
+![frontend list view](./static/img/frontend_list.png)
+
+Each visualized list item is clickable. This opens a modal that fetches detailed card information from the `/api/card` endpoint.
+
+![frontend detail view](./static/img/frontend_detail.png)
+
+Two notes on the frontend implementation:
+
+- The search information is attached to the URL, so that links contain the infromation of the search. Thus, active searches can be shared by sharing the link.
+- Mana symbold are rendered into the text, displayed in the details. The text contains placeholders like `@Red@` that will be replaced by the matching image tag.
+
+### Files
+
+All files are present in this repository. When setting up the project, those are provided to the containers by mounting the directories.
+
+- The used Aiflow DAG: `airflow/mtg_airflow.py`
+- The PySpark transformation: `pyspark/pyspark_prepare_download.py`
+- The DDLs for PostgresQL and HIVE: `ddl/*.sql`. Except for the `ddl/postgres_setup.sql` file, none of those files has to be executed manually.
+- The Python files are in the `src` directory. Each Flask-Python container has a different entry point: `flaks-app.py` for the **Flask (backend) container** and `flaks_frontend` for the **Flask (frontend) container**.
+- The files for the web UI are in the `static` folder, as they are served as static resources.
+- Files for setting up the project are included in the `scrips` directory. For more setup instructions, see the setup section in this documentation.
+
+## API Documentation
+
+### Backend API
+
+The **Flask (Backend) container** exposes an REST API with the following endpoints:
 
 > `/api/test` \
 > Tests the PostgrSQL and Hive connection.
@@ -93,30 +160,34 @@ Due to the educational purpose, different steps use different techniques, even t
 > - **200**: CSV text of all card ids with its set name.
 > - **400**: An error occured during the operation.
 
-TBD: List of endpoints
+### Frontend API
 
-### Job/Transformation description
+The **Flask (Frontend) container** exposes an REST API with the following endpoints:
 
-Explenation of all Airflow DAG steps:
+> `/api/search` \
+> Given a search query, returns a list of matching cards.
+>
+> **Query Params**
+>
+> - **query**: string, search query
+> - **count**: int, default=5, number of cards to be returned.
+> - **target**: string, default=name, field to which the query string
+> applied (name, text or artist)
+>
+> **Returns**
+>
+> - **200**: List of cards encoded as JSON.
 
-- **create_download_dir** and **clear_download_dir**: Creates an directory in the local airflow filesytem (not HDFS), where downloaded files can be stored before they are moved to their final destination.
-- **reate_hdfs_set_names_dir**: HDFS directory for storing a downloaded .html file. This file is later used to scrape a list of all available sets on MTG Gatherer.
-- **create_hdfs_ids_dir** + **create_hive_table_ids**: HDFS directory with matching Hive table that contains .tsv files. They hold a list of 
-- **reate_hdfs_to_download_dir** + **create_hive_to_download_ids**: 
-- **create_hdfs_downloaded_dir** + **create_hive_downloaded_ids**:
-
-
-### Frontend
-
-#### Frontend API
-
-### Files
-
-All files are present in this repository. When setting up the project, those are provided to the containers by mounting the directories.
-
-- The used Aiflow DAG: `airflow/mtg_airflow.py`
-- The PySpark transformation: `pyspark/pyspark_prepare_download.py`
-- The DDLs for PostgresQL and HIVE: `ddl/*.sql`. Except for the `ddl/postgres_setup.sql` file, none of those files has to be executed manually.
+> `/api/card` \
+> Retrieves detailed information about a card.
+>
+> **Query Params**
+>
+> - **query**: int, id of the card
+>
+> **Returns**
+>
+> - **200**: Card information encided as JSON.
 
 ## Setup and startup
 
