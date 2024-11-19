@@ -161,17 +161,21 @@ class PostgresQL():
     # Frontend methods -----------------------------------------------
     
     @staticmethod
-    def search_cards(search_str: str, count: str):
+    def search_cards(search_str: str, target: str, count: str):        
         
-        
-        query = """
+        if target in ["name", "artist"]:
+            query = f"""
             CREATE EXTENSION IF NOT EXISTS pg_trgm;
-            SELECT id, name, type, mana_cost, set, img, SIMILARITY(name, %s) AS sim FROM data.cards WHERE name != 'ERROR!' ORDER BY sim DESC LIMIT %s;
-        """
+            SELECT id, name, type, mana_cost, set, img, SIMILARITY({target}, %s) AS sim FROM data.cards WHERE name != 'ERROR!' ORDER BY sim DESC LIMIT %s;
+            """
+        
+        if target == "text":
+            search_str = f"%{search_str}%"
+            query = f"""SELECT id, name, type, mana_cost, set, img, '1.0' AS sim FROM data.cards WHERE LOWER(text) LIKE LOWER(%s) AND name != 'ERROR!' LIMIT %s;"""
+                
         
         conn = PostgresQL._get_connection()
         cur = conn.cursor()
-        
         cur.execute(query, (search_str, count))
         
         
@@ -184,4 +188,39 @@ class PostgresQL():
             "img": element[5],
             "sim": element[6]
         } for element in cur.fetchall()]
+    
+    @staticmethod
+    def get_card(id: int):
+        
+        query = """        
+            SELECT * FROM data.cards WHERE id = %s LIMIT 1;
+        """
+        
+        conn = PostgresQL._get_connection()
+        cur = conn.cursor()
+        
+        cur.execute(query, (id, ))
+        
+        
+        element = cur.fetchone()
+        
+        if element is None:
+            return Response(response=f"No card with id = {id} was found", status=404)
+        
+        print(element)
+
+        return {
+            "id": element[0],
+            "name": element[1],
+            "type": element[2],
+            "mana_val": element[3],
+            "mana_cost": element[4],
+            "set": element[5],
+            "card_num": element[6],
+            "artist": element[7],
+            "text": element[8],
+            "story": element[9],
+            "url": element[10],
+            "img": element[11]
+        }
         

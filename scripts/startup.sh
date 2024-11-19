@@ -1,7 +1,7 @@
 docker start hadoop airflow python postgres frontend
 docker exec -it hadoop bash -c "sudo su hadoop && cd"
-    start-all.sh
-    hiveserver2
+start-all.sh
+hiveserver2
 
 # Exit cotainer with
 

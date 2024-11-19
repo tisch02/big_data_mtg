@@ -11,12 +11,23 @@ def index():
 def api_search():
     search_str = request.args.get('query', default = None, type = str)
     count = request.args.get('count', default = 5, type = int)
+    target = request.args.get('target', default = "name", type = str)
     
     # Return error if no search stri
     if search_str is None:
         return Response(response="There was no search string provided", status=400)
     
-    return PostgresQL.search_cards(search_str, count)     
+    return PostgresQL.search_cards(search_str, target, count)
+
+@app.route("/api/card") 
+def api_card():    
+    id = request.args.get('id', default = None, type = int)
+    
+    # Return error if no search stri
+    if id is None:
+        return Response(response="No card id was provided", status=404)
+    
+    return PostgresQL.get_card(id)     
 
 if __name__ == '__main__':    
     print("Hallo, Welt!")

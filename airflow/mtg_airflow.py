@@ -18,10 +18,10 @@ args = {
 dag = DAG('MTG_Crawler', 
           default_args=args, 
           description='Crawling and providing MTG card information',
-          schedule_interval='*/5 * * * *',
+          schedule_interval='*/10 * * * *',
           start_date=datetime(2019, 10, 16), 
           catchup=False,
-          dagrun_timeout=timedelta(minutes=5),
+          dagrun_timeout=timedelta(minutes=9),
           max_active_runs=1)
 
 download_id = str(uuid.uuid4())

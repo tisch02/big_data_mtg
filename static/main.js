@@ -1,53 +1,176 @@
 const ID_INPUT_SEARCH = "input-search"
 const ID_DIV_CONTENT_AREA = "content-area"
+const ID_MODAL_DETAIL = "detail-modal"
+const ID_MODAL_TITLE = "detail-modal-label"
+const ID_MODAL_CONTENT = "detail-modal-content"
+const ID_SELECT_SEARCH = "select-search"
 
-const SIM_THRESHOLD = 0.15
+const LOADING_HTML = '<div class="text-center"><img src="../static/img/dancing_duck.gif" width="300em" class="m-5"/></div>'
 
+const SIM_THRESHOLD = 0.11
 function get_base_url() {
     return "http://" + window.location.host + window.location.pathname
 }
 
 function search_enter(e) {
-    if (e.key == "Enter"){
+    if (e.key == "Enter") {
         search()
-    }    
-}
-
-function search() {
-    
-    const search_str = document.getElementById(ID_INPUT_SEARCH).value
-    params = ["search=" + search_str]
-    window.location.href = get_base_url() + "?" + params.join("&")
-}
-
-function page_load() {
-    console.log("Page Load");
-    const urlParams = new URLSearchParams(window.location.search);
-
-    const search_str = urlParams.get("search")
-    if (search_str != null && search_str != ""){
-        document.getElementById(ID_INPUT_SEARCH).value = search_str
-        fetch_data(search_str)
     }
 }
 
-function fetch_data(search_string){
+function change_select() {
+    var e = document.getElementById(ID_SELECT_SEARCH);
+    console.log(e.value);
+    
+    search()
+    
+}
+
+function search() {
+    const search_str = document.getElementById(ID_INPUT_SEARCH).value
+    const search_target = document.getElementById(ID_SELECT_SEARCH).value
+
+    params = ["search=" + search_str, "target=" + search_target]
+    window.location.href = get_base_url() + "?" + params.join("&")
+}
+
+function page_load() {    
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const search_str = urlParams.get("search")
+    const search_target = urlParams.get("target") == null ? "name" : urlParams.get("target")
+
+    if (search_str != null && search_str != "") {
+        document.getElementById(ID_INPUT_SEARCH).value = search_str
+        document.getElementById(ID_SELECT_SEARCH).value = search_target
+        fetch_data(search_str, search_target)
+    } else {
+        document.getElementById(ID_DIV_CONTENT_AREA).innerHTML = `<div class="text-center py-4"><h5>Enter a search to start!</h5></div>`
+    }
+}
+
+function fetch_data(search_string, search_target) {
     // Show loading animation
-    const loading_html = '<div class="text-center"><img src="../static/img/dancing_duck.gif" width="300em" class="m-5"/></div>'
-    document.getElementById(ID_DIV_CONTENT_AREA).innerHTML = loading_html
+    
+    document.getElementById(ID_DIV_CONTENT_AREA).innerHTML = LOADING_HTML
 
     // Fetch the data
     count = 10
-    const request = new Request(`${get_base_url()}/api/search?query=${search_string.replace(" ", "%20")}&count=${count}`);
+    const request = new Request(`${get_base_url()}/api/search?query=${search_string.replace(" ", "%20")}&target=${search_target}&count=${count}`);
     fetch(request)
         .then((response) => response.text())
         .then((text) => {
-            display_search_results(JSON.parse(text))                
-    });
+            display_search_results(JSON.parse(text))
+        });
 }
 
-function show_detail(id) {
-    console.log("Show Detail" + id);    
+function show_detail(id, name) {
+    // Fill loading content   
+    document.getElementById(ID_MODAL_TITLE).innerHTML = `<h1 class="modal-title fs-5">${name}</h1><small class="fs-6 fw-light">(${id})</small>`
+    document.getElementById(ID_MODAL_CONTENT).innerHTML = LOADING_HTML
+    show_detail_modal()
+
+    // Fetch data
+    const request = new Request(`${get_base_url()}/api/card?id=${id}`);
+    fetch(request)
+        .then((response) => response.text())
+        .then((text) => {
+            document.getElementById(ID_MODAL_CONTENT).innerHTML = render_modal_content(JSON.parse(text))            
+        });    
+}
+
+function render_modal_content(card) {
+    return `
+    <div class="row">
+        <div class="col-4">
+            <img src="${card["img"]}" width="100%" class="bg-dark"/>
+        </div>
+        <div class="col-8">
+            <table class="table table-sm">
+  
+                <tbody>
+                    <tr>
+                        <th>Name</th>
+                        <td>${card["name"]}</td>
+                    </tr>
+                    <tr>
+                        <th>Type</th>
+                        <td>${card["type"]}</td>
+                    </tr>
+                    <tr>
+                        <th>Set</th>
+                        <td>${card["set"]}</td>
+                    </tr>
+                    <tr>
+                        <th>Cost</th>
+                        <td>${render_cost(card["mana_cost"], card["mana_val"])}</td>
+                    </tr>
+                    <tr>
+                        <th>MTG Gatherer</th>
+                        <td>Multiverse ID: ${card["id"]} - <a href="${card["url"]}" target="_blank">Original Entry</a></td>
+                    </tr>
+                    <tr>
+                        <th>Artist</th>
+                        <td>${card["artist"]}</td>
+                    </tr>
+                    <tr>
+                        <th>Card Number</th>
+                        <td>${card["card_num"]}</td>
+                    </tr>
+                    <tr>
+                        <th>Text</th>
+                        <td>${render_text(card["text"])}</td>
+                    </tr>
+                    <tr>
+                        <th>Story</th>
+                        <td>${render_story(card["story"])}</td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>        
+    </div>
+
+    `
+}
+
+function render_cost(mana, cost) {
+    if (mana == null) {
+        return "/"
+    }
+
+    return `${render_mana_icons(mana, "16em")}<span class="ms-1">(${cost})</span>`
+}
+
+function render_text(text) {
+    if (text == null){
+        return "/"
+    }
+
+    var ret_str = ""
+    text.split("\r\n").forEach((str) => {
+        ret_str += `<p class="m-0 p-0">${str}</p>`
+    })    
+
+    return `<div class="d-flex flex-column gap-2">${render_mana_icons(ret_str, "16em")}</div>`
+}
+
+function render_story(story) {
+    if (story == null){
+        return "/"
+    }
+
+    var ret_str = ""
+    story.replace("—", "\r\n—").split("\r\n").forEach((str) => {
+        ret_str += `<p class="m-0 p-0">${str}</p>`
+    })    
+    
+    return `<div class="d-flex flex-column gap-1"><i>${ret_str}</i></div>`
+}
+
+function show_detail_modal() {
+    const detail_modal = new bootstrap.Modal(document.getElementById(ID_MODAL_DETAIL), {})    
+    detail_modal.show("")
 }
 
 const ICON_MAP = {
@@ -72,18 +195,19 @@ const ICON_MAP = {
     "Red": "R",
     "Black": "B",
     "White": "W",
-    "Tap": "tap"
+    "Tap": "tap",
+    "Colorless": "C"
 }
 
-function render_mana_icons(str) {
+function render_mana_icons(str, width="20em") {
     if (str == null) {
         return "/"
-    }            
+    }
 
     var result = str
 
     for (const [key, value] of Object.entries(ICON_MAP)) {
-        const html = `<img src="https://gatherer.wizards.com/Handlers/Image.ashx?size=medium&name=${value}&type=symbol" width="20em"/>`
+        const html = `<img src="https://gatherer.wizards.com/Handlers/Image.ashx?size=medium&name=${value}&type=symbol" width="${width}"/>`
         result = result.replaceAll(`@${key}@`, html)
     }
 
@@ -96,7 +220,7 @@ function display_search_results(json_obj) {
     json_obj.forEach(element => {
 
         if (element["sim"] >= SIM_THRESHOLD) {
-            html_str += `<div class="d-flex p-3 bg-body-tertiary rounded shadow zoom cursor-pointer mt-4" onclick="show_detail(${element["id"]})">
+            html_str += `<div class="d-flex p-3 bg-body-tertiary rounded shadow zoom cursor-pointer mt-4" onclick="show_detail(${element["id"]}, '${element["name"].replace("'", "\\'")}')">
                         <img src="${element["img"]}" width="100em" class="bg-dark"/>
                         <div class="flex-grow-1 mx-3">
                             <h5 class="mb-0">${element["name"]}</h5>
@@ -117,6 +241,6 @@ function display_search_results(json_obj) {
     if (html_str == "") {
         html_str = `<div class="text-center py-4"><h5>Seems like there is no card that matches the search :/</h5></div>`
     }
-    
+
     document.getElementById(ID_DIV_CONTENT_AREA).innerHTML = html_str
 }
