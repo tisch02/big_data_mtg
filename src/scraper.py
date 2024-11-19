@@ -41,10 +41,19 @@ class Scraper():
         return [int(row.find("a").get("href").split("multiverseid=")[1].split("&")[0]) for row in rows]
     
     @staticmethod
-    def card_ids(set_name):                
+    def card_ids(set_name):  
+        cols = ["id", "insert_date", "set_name"]
+        df = pd.DataFrame(columns=cols)
         page_num = 0
         stop = False
         results = []
+        
+        # Return empty df if no card ids are to scrape
+        if set_name is None:
+            return df
+        
+                 
+        
     
         while not stop:
             # Concatenate URL with card search query and page number
@@ -61,9 +70,7 @@ class Scraper():
                 stop = True
             page_num += 1
             
-        # Create dataframe
-        cols = ["id", "insert_date", "set_name"]
-        df = pd.DataFrame(columns=cols)        
+        # Create dataframe        
         for url, ids, date in results:
             append_frame = pd.DataFrame(data={
                 "id": ids,

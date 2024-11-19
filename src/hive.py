@@ -18,26 +18,24 @@ class Hive():
         conn = Hive._get_connection()
         cur = conn.cursor()
         cur.execute("SELECT version()")
-        return cur.fetchone()[0]
-    
-    @staticmethod
-    def drop_tables():
-        conn = Hive._get_connection()
-        cur = conn.cursor()
-        cur.execute("DROP TABLE IF EXISTS ids PURGE")
-        conn.commit()
-        return ""
+        result = cur.fetchone()[0]
+        cur.close()
+        return result
     
     @staticmethod
     def get_sets():
         conn = Hive._get_connection()
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT(set_name) FROM ids")
-        return [x[0] for x in cur.fetchall()]
+        result = [x[0] for x in cur.fetchall()]
+        cur.close()
+        return result
     
     @staticmethod
     def get_download_ids():
         conn = Hive._get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, set_name FROM todownload")        
-        return [(x[0], x[1]) for x in cur.fetchall()]
+        cur.execute("SELECT id, set_name FROM todownload")
+        result = [(x[0], x[1]) for x in cur.fetchall()]     
+        cur.close()
+        return result

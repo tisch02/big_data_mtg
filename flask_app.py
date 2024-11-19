@@ -10,6 +10,7 @@ IP = "127.0.0.1"
 
 @app.route("/api/test")
 def test():
+    """Tests the PostgrSQL and Hive connection."""
     try: 
         # Test all connections
         hive_version = Hive.get_version()
@@ -24,42 +25,50 @@ def test():
 
 @app.route("/api/postgres-create")
 def postgres_create():
-    return PostgresQL.create_tables()
+    """Creates all needed PostgreSQL tables if the don't exist"""
+    try:
+        PostgresQL.create_tables()
+        return Response(status=200)
+    except:
+        return Response(status=400) 
 
-@app.route("/api/postgres-drop")
-def postgres_drop():
-    return PostgresQL.drop_tables()
-
-@app.route("/api/hive-drop")
-def hive_drop():
-    return Hive.drop_tables()
-
-@app.route("/api/set-names")
-def hadoop_read():
-    hdfs = Hadoop()
-    path = "/user/hadoop/mtg/sets/set_names.html"
-    names = Scraper.sets(hdfs.get_file(path))
-    return PostgresQL.store_sets(names)
+@app.route("/api/store-set-names")
+def store_set_names():
+    """Stores all set names into PostgreSQL"""
+    try:
+        hdfs = Hadoop()
+        path = "/user/hadoop/mtg/sets/set_names.html"
+        names = Scraper.sets(hdfs.get_file(path))
+        result = PostgresQL.store_sets(names)
+        return Response(response=result, status=200)    
+    except:
+        return Response(status=400)
+    
 
 @app.route("/api/mark-stored-sets")
-def stored_sets():
-    set_names = Hive.get_sets()    
-    PostgresQL.mark_stored_sets(set_names)
-    return ", ".join(set_names)
-
-@app.route("/api/prepare-card-ids")
-def prepare_card_ids():
-    # TODO: Only return if a certain amount of undownloaded cards is passed
+def mark_stored_sets():
+    """Marks all sets in the PostgreSQL which names are in the Hive table"""
+    try:
+        set_names = Hive.get_sets()    
+        PostgresQL.mark_stored_sets(set_names)
+        result = ", ".join(set_names)
+        return Response(response=result, status=200)    
+    except:
+        return Response(status=400)
     
-    set_name = PostgresQL.get_set_name()
-    
-    if set_name is not None:
+@app.route("/api/get-set-ids")
+def get_set_ids():
+    """Scapres a list of card ids for a set."""
+    try:
+        set_name = PostgresQL.get_set_name()
         df = Scraper.card_ids(set_name)    
         return df.to_csv(index=False, sep="\t")
-    return Response(response="There is no more set to dowload", status=400)
+    except:
+        return Response(status=400)
 
 @app.route("/api/download-cards")
 def download_cards():
+    """Dowloads and stores iformation of all cards that should be downloaded."""
     ids = Hive.get_download_ids()
        
     if len(ids) == 0:
@@ -74,10 +83,13 @@ def download_cards():
 
 @app.route("/api/downloaded-cards")
 def downloaded_cards():
-    df = PostgresQL.downloaded_cards()
-    df = df.rename(columns={"set": "set_name"})
-    return df.to_csv(index=False, sep=",")
+    """Gets a list of all cards that are downloaded."""
+    try:
+        df = PostgresQL.downloaded_cards()
+        df = df.rename(columns={"set": "set_name"})
+        return df.to_csv(index=False, sep=",")
+    except:
+        return Response(status=400)
 
-if __name__ == '__main__':    
-    PostgresQL.IP = IP
+if __name__ == '__main__':
     app.run(host="0.0.0.0", port=38383, debug=True)

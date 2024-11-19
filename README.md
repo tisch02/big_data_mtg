@@ -4,17 +4,122 @@ For task and lecture reference, see: [GitHub Repo](https://github.com/marcelmitt
 
 ## Documentation
 
+As presented in the image below, the whole project is composed of five docker container. Each has its own job:
+
+- The **PostgreSQL container** container contains the end-user database.
+- The **Flaks (Frontend) container** functions as a webserver for the web UI and provides a REST API to fetch data from the end-user database.
+- The **Hadoop/Hive** container contains raw data that is donwloaded or provides in ETL process.
+- The **Flask (Backend) container** exposes a REST API that serves differen purposes. The main task is to parse (donwloaded) HTML pages and extract their information. Additionally, some tasks interact with the end-user database and the Hadoop/Hive container.
+- The **Airflow container** manages the whole ETL workflow and trigger actions regarding the Flask (Backend) container, the Hadoop/Hive container and own PySpark transformations.
+
+![image docker structure](./static/img/container_structure.png)
+
+Why use a seperate **Flask (Backend) container** event though the **Airflow container** runs Python as well?
+
+- Airflow runs on the Python version 2.7., which is deprecated since January 2020. To still use up-to-date python packages, the **Flaks (Backend) container** is added, that runs on Python 3.12.
+
 ### ETL Explanation
+
+The ETL workflow runs every 10 minutes. With every run, 10 more cards are added to the end-user database which is accessable via the web UI.
 
 ### Aiflow DAG overview
 
+Due to the educational purpose, different steps use different techniques, even though all could have been implemented using the same procedure.
+
+#### Backend API
+
+> `/api/test` \
+> Tests the PostgrSQL and Hive connection.
+>
+> **Returns**
+>
+> - **200**: PostgreSQL and Hive version.
+> - **400**: An error occured during the operation.
+
+> `/api/postgres-create` \
+> Creates all needed PostgreSQL tables if the don't exist.
+>
+> **Returns**
+>
+> - **200**: Queries for creating the tables were successful
+> - **400**: An error occured during the operation.
+
+> `/api/store-set-names` \
+> Takes the downloaded .html and extracts a list of all set names.
+> The list is stored to the PostgreSQL database. Existing elements
+> are not overwritten. New elements will be appended
+>
+> **Returns**
+>
+> - **200**: Returns a string indicating the number of strings
+> that were added to the PostgreSQL
+> - **400**: An error occured during the operation.
+
+> `/api/get-set-ids` \
+> Gets a set name from the PostgreSQL that is marked as not downloaded.
+> Then, it scrapes a list of all card ids from MTG Gatherer.
+> These ids are then returned as a tsv.
+>
+> **Returns**
+>
+> - **200**: Returns a tsv list with all ids for a given set.
+> - **400**: An error occured during the operation.
+
+> `/api/mark-stored-sets` \
+> Quries a distinc list of set names which card ids are scraped.
+> For each set in this list, the corresponding PostgreSQL entry is also
+> markd as downloaded.
+>
+> **Returns**
+>
+> - **200**: Returns a comma seperated list of all downloaded set names.
+> - **400**: An error occured during the operation.
+
+> `/api/download-cards` \
+> Retrieves the list of cards that should be downloaded via Hive.
+> Then downloads all cards, extracts the information and
+> stores it to the PostgreSQL database.
+>
+> **Returns**
+>
+> - **200**: Returns a string indicating the number of scraped cards.
+> - **400**: An error occured during the operation.
+
+> `/api/downloaded-cards` \
+> Gets a list of all cards that are donwloaded into the PostgreSQL
+>
+> **Returns**
+>
+> - **200**: CSV text of all card ids with its set name.
+> - **400**: An error occured during the operation.
+
+TBD: List of endpoints
+
 ### Job/Transformation description
+
+Explenation of all Airflow DAG steps:
+
+- **create_download_dir** and **clear_download_dir**: Creates an directory in the local airflow filesytem (not HDFS), where downloaded files can be stored before they are moved to their final destination.
+- **reate_hdfs_set_names_dir**: HDFS directory for storing a downloaded .html file. This file is later used to scrape a list of all available sets on MTG Gatherer.
+- **create_hdfs_ids_dir** + **create_hive_table_ids**: HDFS directory with matching Hive table that contains .tsv files. They hold a list of 
+- **reate_hdfs_to_download_dir** + **create_hive_to_download_ids**: 
+- **create_hdfs_downloaded_dir** + **create_hive_downloaded_ids**:
+
+
+### Frontend
+
+#### Frontend API
 
 ### Files
 
-All files are present in this repository
+All files are present in this repository. When setting up the project, those are provided to the containers by mounting the directories.
+
+- The used Aiflow DAG: `airflow/mtg_airflow.py`
+- The PySpark transformation: `pyspark/pyspark_prepare_download.py`
+- The DDLs for PostgresQL and HIVE: `ddl/*.sql`. Except for the `ddl/postgres_setup.sql` file, none of those files has to be executed manually.
 
 ## Setup and startup
+
 To **setup the project** for the first time, follow and execute the steps listed in `scripts/setup.sh`.
 
 To **start the project** if it is already setup, follow and execute the steps listed in `scripts/startup.sh`.

@@ -196,7 +196,8 @@ const ICON_MAP = {
     "Black": "B",
     "White": "W",
     "Tap": "tap",
-    "Colorless": "C"
+    "Colorless": "C",
+    "Variable Colorless": "X"
 }
 
 function render_mana_icons(str, width="20em") {

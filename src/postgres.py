@@ -33,126 +33,95 @@ class PostgresQL():
     
     @staticmethod
     def create_tables():
-        try:
-            conn = PostgresQL._get_connection()
-            cur = conn.cursor()
+        conn = PostgresQL._get_connection()
+        cur = conn.cursor()
         
-            # Create Schema
-            cur.execute("""CREATE SCHEMA IF NOT EXISTS data;""")
-            conn.commit()
+        # Create Schema
+        cur.execute("""CREATE SCHEMA IF NOT EXISTS data;""")
+        conn.commit()
             
-            # Creat tables        
-            cur.execute("""
-                        CREATE TABLE IF NOT EXISTS data.sets (
-                            name VARCHAR(256) PRIMARY KEY,
-                            downloaded BOOL
-                        );""")
+        # Creat tables        
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS data.sets (
+                name VARCHAR(256) PRIMARY KEY,
+                downloaded BOOL
+            );""")
             
-            cur.execute("""
-                        CREATE TABLE IF NOT EXISTS data.cards (
-                            id INT PRIMARY KEY,
-                            name VARCHAR(256),
-                            type VARCHAR(256),
-                            mana_val INT,
-                            mana_cost VARCHAR(256),
-                            set VARCHAR(256),
-                            card_num INT,
-                            artist VARCHAR(256),
-                            text TEXT,
-                            story TEXT,
-                            url VARCHAR(1024),
-                            img VARCHAR(1024)
-                        );""")
-            conn.commit()  
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS data.cards (
+                id INT PRIMARY KEY,
+                name VARCHAR(256),
+                type VARCHAR(256),
+                mana_val INT,
+                mana_cost VARCHAR(256),
+                set VARCHAR(256),
+                card_num INT,
+                artist VARCHAR(256),
+                text TEXT,
+                story TEXT,
+                url VARCHAR(1024),
+                img VARCHAR(1024)
+            );""")
         
-            return Response(status=200)
-            
-        except Exception as ex:
-            print(ex)
-            return Response(status=400)
-    
-    @staticmethod
-    def drop_tables():
-        try:
-            conn = PostgresQL._get_connection()
-            cur = conn.cursor()            
-            cur.execute("""DROP TABLE IF EXISTS data.sets;""")
-            conn.commit()  
+        # Commit changes
+        conn.commit()  
         
-            return Response(status=200)
-            
-        except:
-            return Response(status=400)    
-    
     @staticmethod
     def store_sets(names: list[str]):
-        try:
-            conn = PostgresQL._get_connection()
-            cur = conn.cursor()
+        conn = PostgresQL._get_connection()
+        cur = conn.cursor()
             
-            # Get names that are already stored
-            cur.execute("""SELECT name FROM data.sets;""")
-            set_names = [x[0] for x in cur.fetchall()]            
+        # Get names that are already stored
+        cur.execute("""SELECT name FROM data.sets;""")
+        set_names = [x[0] for x in cur.fetchall()]            
             
-            # Create value array for every name that is not already stored
-            values = []
-            for name in names:
-                if name not in set_names:
-                    values.append((name, False))
+        # Create value array for every name that is not already stored
+        values = []
+        for name in names:
+            if name not in set_names:
+                values.append((name, False))
                     
-            # Create a query string for every values
-            query = """INSERT INTO data.sets (name, downloaded) VALUES (%s, %s);"""
+        # Create a query string for every values
+        query = """INSERT INTO data.sets (name, downloaded) VALUES (%s, %s);"""
             
-            cur.executemany(query, values)
-            conn.commit()  
-        
-            return Response(response=f"Added {len(values)} new sets to the database.", status=200)
-            
-        except Exception as error:
-            print(error)
-            return Response(response=str(error), status=400)
+        cur.executemany(query, values)
+        conn.commit()  
+    
+        return f"Added {len(values)} new sets to the database."
         
     @staticmethod
-    def get_set_name() -> str | None:
-        try:
-            conn = PostgresQL._get_connection()
-            cur = conn.cursor()                
-            cur.execute("""SELECT name FROM data.sets WHERE downloaded = false ORDER BY name LIMIT 1;""")
-            fetch = cur.fetchone()
-            return None if fetch is None else fetch[0]
-            
-        except Exception as error:
-            return Response(response=str(error), status=400)
+    def get_set_name():
+        conn = PostgresQL._get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""SELECT name FROM data.sets WHERE downloaded = false ORDER BY name LIMIT 1;""")
+        fetch = cur.fetchone()
+        return None if fetch is None else fetch[0]
         
     @staticmethod
-    def mark_stored_sets(sets: list[str]) -> None:
-        try:
-            conn = PostgresQL._get_connection()
-            cur = conn.cursor()
+    def mark_stored_sets(sets: list[str]):
+        conn = PostgresQL._get_connection()
+        cur = conn.cursor()
             
-            for set in sets:                
-                cur.execute("""UPDATE data.sets SET downloaded = true WHERE downloaded = false AND name = %s;""", (set, ))
-            conn.commit()
-            
-            return Response(status=200)
-            
-        except Exception as error:            
-            return Response(response=str(error), status=400)
+        for set in sets:                
+            cur.execute("""UPDATE data.sets SET downloaded = true WHERE downloaded = false AND name = %s;""", (set, ))
+        conn.commit()
         
     @staticmethod
-    def insert_cards(cards_df: pd.DataFrame) -> bool:        
+    def insert_cards(cards_df: pd.DataFrame):        
         try:            
             conn = PostgresQL._get_alq_engine().connect() 
             cards_df.to_sql(name="cards", schema="data", con=conn, if_exists="append", index=False)
             conn.commit()
             conn.close()
-            return True                                          
+            return True    
+
         except Exception as error:
             print(error)
             return False
 
     @staticmethod
-    def downloaded_cards() -> None:
+    def downloaded_cards():
         conn = PostgresQL._get_alq_engine().connect() 
         result = pd.read_sql_query("SELECT id, set FROM data.cards", con=conn)
         conn.close()
@@ -162,7 +131,7 @@ class PostgresQL():
     
     @staticmethod
     def search_cards(search_str: str, target: str, count: str):        
-        
+        # Prepare query based on parameters
         if target in ["name", "artist"]:
             query = f"""
             CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -173,12 +142,12 @@ class PostgresQL():
             search_str = f"%{search_str}%"
             query = f"""SELECT id, name, type, mana_cost, set, img, '1.0' AS sim FROM data.cards WHERE LOWER(text) LIKE LOWER(%s) AND name != 'ERROR!' LIMIT %s;"""
                 
-        
+        # Execute query
         conn = PostgresQL._get_connection()
         cur = conn.cursor()
         cur.execute(query, (search_str, count))
         
-        
+        # Return as json object
         return [{
             "id": element[0],
             "name": element[1],
@@ -191,24 +160,17 @@ class PostgresQL():
     
     @staticmethod
     def get_card(id: int):
-        
-        query = """        
-            SELECT * FROM data.cards WHERE id = %s LIMIT 1;
-        """
-        
+        # Execute query
         conn = PostgresQL._get_connection()
         cur = conn.cursor()
+        cur.execute("""SELECT * FROM data.cards WHERE id = %s LIMIT 1;""", (id, ))
         
-        cur.execute(query, (id, ))
-        
-        
+        # Fetch element
         element = cur.fetchone()
-        
         if element is None:
             return Response(response=f"No card with id = {id} was found", status=404)
         
-        print(element)
-
+        # Return as json object
         return {
             "id": element[0],
             "name": element[1],
@@ -223,4 +185,3 @@ class PostgresQL():
             "url": element[10],
             "img": element[11]
         }
-        

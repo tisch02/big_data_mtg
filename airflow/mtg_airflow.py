@@ -65,6 +65,8 @@ clear_download_dir = ClearDirectoryOperator(
     dag=dag,
 )
 
+# Download
+
 download_set_names = HttpDownloadOperator(
     task_id='download_set_names',
     download_uri='https://gatherer.wizards.com/pages/Default.aspx',
@@ -72,9 +74,9 @@ download_set_names = HttpDownloadOperator(
     dag=dag,
 )
 
-download_ids = HttpDownloadOperator(
-    task_id='download_ids',
-    download_uri='http://python:38383/api/prepare-card-ids',
+download_set_ids = HttpDownloadOperator(
+    task_id='download_set_ids',
+    download_uri='http://python:38383/api/get-set-ids',
     save_to=f'/home/airflow/downloads/set_ids.tsv',
     dag=dag,
 )
@@ -85,6 +87,8 @@ download_downloaded_cards = HttpDownloadOperator(
     save_to=f'/home/airflow/downloads/downloaded_cards.csv',
     dag=dag,
 )
+
+# HDFS Mkdir
 
 create_hdfs_set_names_dir = HdfsMkdirFileOperator(
     task_id='create_hdfs_set_names_dir',
@@ -114,6 +118,8 @@ create_hdfs_downloaded_dir = HdfsMkdirFileOperator(
     dag=dag,
 )
 
+# HDFS Put
+
 hdfs_put_set_names_file = HdfsPutFileOperator(
     task_id='hdfs_put_set_names_file',
     local_file='/home/airflow/downloads/set_names.html',
@@ -138,6 +144,8 @@ hdfs_put_downloaded_cards_file = HdfsPutFileOperator(
     dag=dag,
 )
 
+# Bash / curl
+
 postgres_create = BashOperator(
     task_id='postgres_create',
     bash_command='curl http://python:38383/api/postgres-create',
@@ -146,7 +154,7 @@ postgres_create = BashOperator(
 
 store_set_names = BashOperator(
     task_id='store_set_names',
-    bash_command='curl http://python:38383/api/set-names',
+    bash_command='curl http://python:38383/api/store-set-names',
     dag=dag
 )
 
@@ -162,6 +170,8 @@ download_cards = BashOperator(
     dag=dag
 )
 
+# Hive
+
 create_hive_table_ids = HiveOperator(
     task_id='create_hive_table_ids',
     hql=hql_create_ids_list,
@@ -169,19 +179,21 @@ create_hive_table_ids = HiveOperator(
     dag=dag
 )
 
-create_hive_to_download_ids = HiveOperator(
-    task_id='create_hive_to_download_ids',
+create_hive_table_to_download = HiveOperator(
+    task_id='create_hive_table_to_download',
     hql=hql_to_download_ids,
     hive_cli_conn_id='beeline',
     dag=dag
 )
 
-create_hive_downloaded_ids = HiveOperator(
-    task_id='create_hive_downloaded_ids',
+create_hive_tabel_downloaded = HiveOperator(
+    task_id='create_hive_tabel_downloaded',
     hql=hql_downloaded_ids,
     hive_cli_conn_id='beeline',
     dag=dag
 )
+
+# Spark
 
 pyspark_prepare_download = SparkSubmitOperator(
     task_id='pyspark_prepare_download',
@@ -197,13 +209,17 @@ pyspark_prepare_download = SparkSubmitOperator(
     dag = dag
 )
 
-dummy_op = DummyOperator(
-        task_id='dummy', 
-        dag=dag)
+# Others
 
-dummy_op_2 = DummyOperator(
-        task_id='dummy_2', 
-        dag=dag)
+dummy_split = DummyOperator(
+    task_id='dummy_split', 
+    dag=dag
+)
+
+dummy_collect = DummyOperator(
+    task_id='dummy_collect', 
+    dag=dag
+)
 
 # Flow -------------------------------------------------------------
 
@@ -211,13 +227,13 @@ dummy_op_2 = DummyOperator(
     create_download_dir >> clear_download_dir,
     create_hdfs_set_names_dir,
     create_hdfs_ids_dir >> create_hive_table_ids,
-    create_hdfs_to_download_dir >> create_hive_to_download_ids,
-    create_hdfs_downloaded_dir >> create_hive_downloaded_ids,
+    create_hdfs_to_download_dir >> create_hive_table_to_download,
+    create_hdfs_downloaded_dir >> create_hive_tabel_downloaded,
     postgres_create
-] >> dummy_op
+] >> dummy_split
 
 
-dummy_op >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_ids >> hdfs_put_ids_file >> dummy_op_2
-dummy_op >> download_downloaded_cards >> hdfs_put_downloaded_cards_file >> dummy_op_2
+dummy_split >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_set_ids >> hdfs_put_ids_file >> dummy_collect
+dummy_split >> download_downloaded_cards >> hdfs_put_downloaded_cards_file >> dummy_collect
 
-dummy_op_2 >> pyspark_prepare_download >> download_cards
+dummy_collect >> pyspark_prepare_download >> download_cards
