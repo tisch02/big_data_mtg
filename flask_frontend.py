@@ -21,8 +21,7 @@ def api_search():
 
 @app.route("/api/card") 
 def api_card():    
-    ids = request.args.get('id', default = None, type = int)
-    df = json_normalize()
+    id = request.args.get('id', default = None, type = int)
     
     # Return error if no search stri
     if id is None:
