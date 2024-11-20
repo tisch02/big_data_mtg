@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, request
 from src.scraper import Scraper
 from src.hadoop import Hadoop
 from src.postgres import PostgresQL
@@ -17,7 +17,7 @@ def test():
                 
         return {
             "hive version": hive_version,
-            "postgres_version": postgres_version
+            "postgres_version": postgres_version            
         }
     except:
         return Response(status=400)
@@ -96,6 +96,17 @@ def downloaded_cards():
         df = PostgresQL.downloaded_cards()
         df = df.rename(columns={"set": "set_name"})
         return df.to_csv(index=False, sep=",")
+    except:
+        return Response(status=400)
+
+@app.route("/api/get-to-download-ids")
+def get_to_download_ids():
+    """Gets a list of all cards that should be downloaded next."""
+    print("Start: get-to-download-ids")
+    count = request.args.get('count', default = 10, type = int)
+    try:
+        df = Hive.get_to_todownload_ids(count)
+        return df.to_csv(index=False)
     except:
         return Response(status=400)
 

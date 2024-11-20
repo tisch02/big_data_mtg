@@ -62,7 +62,7 @@ class Scraper():
             ids = Scraper._get_card_ids(content)
             results.append((url, ids, datetime.now().isoformat()))
             
-            # Continue throug all pages              
+            # Continue through all pages              
             if Scraper._is_last(content):
                 stop = True
             page_num += 1
@@ -89,7 +89,7 @@ class Scraper():
         return "".join([(f"@{e["alt"]}@" if "<img" in str(e) else str(e)) for e in soup])
     
     @staticmethod
-    def _get_card_numer(soup: BeautifulSoup) -> int | None:
+    def _get_card_number(soup: BeautifulSoup) -> int | None:
         row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_numberRow")
         if row is None:
             return None
@@ -124,7 +124,7 @@ class Scraper():
     
     @staticmethod
     def _get_card_story(soup: BeautifulSoup) -> str | None:
-        """Scrapes the falvour text
+        """Scrapes the flavour text
         """
         # Return none if no story is on the card
         row = soup.find(id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_flavorRow")
@@ -212,7 +212,7 @@ class Scraper():
             "mana_val": Scraper._get_card_mana_val(soup),
             "mana_cost": Scraper._get_card_mana_cost(soup),
             "set": Scraper._get_card_set(soup),
-            "card_num": Scraper._get_card_numer(soup),
+            "card_num": Scraper._get_card_number(soup),
             "artist": Scraper._get_card_artist(soup),
             "text": Scraper._get_card_text(soup),
             "story": Scraper._get_card_story(soup),

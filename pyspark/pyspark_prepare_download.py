@@ -22,9 +22,7 @@ if __name__ == '__main__':
 
     # Initialize Spark Context
     sc = pyspark.SparkContext()
-    spark = SparkSession(sc)
-    
-    print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! START !!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")
+    spark = SparkSession(sc)    
 
     # Read ids from HDFS    
     df_ids = spark.read.format('csv').options(header='true', delimiter='\t', inferschema='true').load(args.hdfs_source_dir + '/ids/*.tsv')
@@ -41,8 +39,6 @@ if __name__ == '__main__':
     
     df_result = spark.createDataFrame(id_dif[0:num])
     
-    # Write result    
+    # Write and print result    
     df_result.write.format('csv').options(header='True').mode('overwrite').save(args.hdfs_target_dir)
-    
-    print("\n\n\n\n!!!!!!!!!!!!!!!!!!!! END !!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n")    
     df_result.show()

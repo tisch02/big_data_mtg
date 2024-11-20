@@ -40,7 +40,7 @@ class PostgresQL():
         cur.execute("""CREATE SCHEMA IF NOT EXISTS data;""")
         conn.commit()
             
-        # Creat tables        
+        # Create tables        
         cur.execute("""
             CREATE TABLE IF NOT EXISTS data.sets (
                 name VARCHAR(256) PRIMARY KEY,

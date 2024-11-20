@@ -1,4 +1,5 @@
 from pyhive import hive
+import pandas as pd
 
 class Hive():
 
@@ -36,3 +37,12 @@ class Hive():
         result = [(x[0], x[1]) for x in cur.fetchall()]     
         conn.close()
         return result
+    
+    def get_to_todownload_ids(count: int):
+        conn = Hive._get_connection()
+        cur = conn.cursor()        
+        cur.execute("""SELECT ids.id, ids.set_name FROM ids WHERE ids.id NOT IN (SELECT downloaded.id FROM downloaded) LIMIT %s""", (count, ))
+        cols = ["id", "set_name"]        
+        result = [pd.DataFrame(data={"id": x[0], "set_name": x[1]}, columns=cols, index=["id"]) for x in cur.fetchall()]
+        conn.close()
+        return pd.concat(result)

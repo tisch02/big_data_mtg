@@ -88,6 +88,13 @@ download_downloaded_cards = HttpDownloadOperator(
     dag=dag,
 )
 
+download_to_download_ids = HttpDownloadOperator(
+    task_id='download_to_download_ids',
+    download_uri='http://python:38383/api/get-to-download-ids?count=20',
+    save_to=f'/home/airflow/downloads/to_download.csv',
+    dag=dag,
+)
+
 # HDFS Mkdir
 
 create_hdfs_set_names_dir = HdfsMkdirFileOperator(
@@ -144,6 +151,14 @@ hdfs_put_downloaded_cards_file = HdfsPutFileOperator(
     dag=dag,
 )
 
+hdfs_put_to_download_ids_file = HdfsPutFileOperator(
+    task_id='hdfs_put_to_download_ids_file',
+    local_file=f'/home/airflow/downloads/to_download.csv',
+    remote_file=f'/user/hadoop/mtg/todownload/to_download.csv',
+    hdfs_conn_id='hdfs',
+    dag=dag,
+)
+
 # Bash / curl
 
 postgres_create = BashOperator(
@@ -186,8 +201,8 @@ create_hive_table_to_download = HiveOperator(
     dag=dag
 )
 
-create_hive_tabel_downloaded = HiveOperator(
-    task_id='create_hive_tabel_downloaded',
+create_hive_table_downloaded = HiveOperator(
+    task_id='create_hive_table_downloaded',
     hql=hql_downloaded_ids,
     hive_cli_conn_id='beeline',
     dag=dag
@@ -195,17 +210,17 @@ create_hive_tabel_downloaded = HiveOperator(
 
 # Spark
 
-pyspark_prepare_download = SparkSubmitOperator(
-    task_id='pyspark_prepare_download',
-    conn_id='spark',
-    application='/home/airflow/airflow/python/pyspark_prepare_download.py',        
-    executor_memory='3g',
-    num_executors='4',
-    name='spark_prepare_download',
-    verbose=True,
-    application_args=['--hdfs_source_dir', '/user/hadoop/mtg', '--hdfs_target_dir', '/user/hadoop/mtg/todownload', '--count', '10'],
-    dag = dag
-)
+# pyspark_prepare_download = SparkSubmitOperator(
+#     task_id='pyspark_prepare_download',
+#     conn_id='spark',
+#     application='/home/airflow/airflow/python/pyspark_prepare_download.py',        
+#     executor_memory='3g',
+#     num_executors='4',
+#     name='spark_prepare_download',
+#     verbose=True,
+#     application_args=['--hdfs_source_dir', '/user/hadoop/mtg', '--hdfs_target_dir', '/user/hadoop/mtg/todownload', '--count', '10'],
+#     dag = dag
+# )
 
 # Others
 
@@ -226,11 +241,12 @@ dummy_collect = DummyOperator(
     create_hdfs_set_names_dir,
     create_hdfs_ids_dir >> create_hive_table_ids,
     create_hdfs_to_download_dir >> create_hive_table_to_download,
-    create_hdfs_downloaded_dir >> create_hive_tabel_downloaded,
+    create_hdfs_downloaded_dir >> create_hive_table_downloaded,
     postgres_create
 ] >> dummy_split
 
 dummy_split >> download_set_names >> hdfs_put_set_names_file >> store_set_names >> mark_downloaded_set_ids >> download_set_ids >> hdfs_put_ids_file >> dummy_collect
 dummy_split >> download_downloaded_cards >> hdfs_put_downloaded_cards_file >> dummy_collect
 
-dummy_collect >> pyspark_prepare_download >> download_cards
+# dummy_collect >> pyspark_prepare_download >> download_cards
+dummy_collect >> download_to_download_ids >> hdfs_put_to_download_ids_file >> download_cards
